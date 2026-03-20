@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financeiro</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#f8f1f8;
+    color:#4a4265;
+    min-height:100vh;
+}
+
+/* TOPO */
+.topo{
+    background:linear-gradient(90deg,#e48db6 0%, #b678df 52%, #7e5be9 100%);
+    color:white;
+    padding:28px 20px 34px;
+    border-bottom-left-radius:30px;
+    border-bottom-right-radius:30px;
+    box-shadow:0 10px 30px rgba(157, 103, 214, 0.22);
+}
+
+.topo h2{
+    font-size:30px;
+    margin-bottom:8px;
+    font-weight:700;
+}
+
+.topo p{
+    font-size:15px;
+    color:rgba(255,255,255,0.92);
+    margin-bottom:18px;
+}
+
+.menu{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.menu a{
+    text-decoration:none;
+    background:rgba(255,255,255,0.95);
+    color:#433a61;
+    padding:11px 16px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:bold;
+    box-shadow:0 6px 18px rgba(77, 45, 120, 0.10);
+    transition:0.2s ease;
+}
+
+.menu a:hover{
+    transform:translateY(-1px);
+    background:#fff;
+}
+
+/* CONTAINER */
+.container{
+    max-width:1100px;
+    margin:30px auto;
+    padding:0 16px 30px;
+}
+
+/* AÇÕES */
+.topo-acoes{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.subtitulo{
+    color:#6d6487;
+    font-size:15px;
+}
+
+.btn-exportar{
+    border:none;
+    background:linear-gradient(90deg,#df8eb4 0%, #b678df 52%, #7e5be9 100%);
+    color:white;
+    padding:14px 18px;
+    border-radius:16px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 10px 24px rgba(163, 110, 220, 0.24);
+    transition:0.2s ease;
+}
+
+.btn-exportar:hover{
+    transform:translateY(-1px);
+    box-shadow:0 12px 28px rgba(163, 110, 220, 0.30);
+}
+
+/* CARDS RESUMO */
+.resumos{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:18px;
+    margin-bottom:22px;
+}
+
+.resumo-card{
+    background:rgba(255,255,255,0.75);
+    border:1px solid #eadcf3;
+    border-radius:24px;
+    padding:22px;
+    box-shadow:0 10px 28px rgba(165, 131, 200, 0.12);
+}
+
+.resumo-topo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+}
+
+.icone{
+    width:46px;
+    height:46px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    background:linear-gradient(135deg,#f6d3e4,#dcc8fb);
+}
+
+.resumo-titulo{
+    font-size:14px;
+    color:#7a7295;
+    font-weight:700;
+}
+
+.resumo-valor{
+    font-size:28px;
+    font-weight:700;
+    color:#2f2a4a;
+}
+
+.resumo-desc{
+    margin-top:6px;
+    color:#8a82a3;
+    font-size:13px;
+}
+
+/* CARD PADRÃO */
+.card{
+    background:rgba(255,255,255,0.75);
+    border-radius:24px;
+    padding:24px;
+    box-shadow:0 10px 28px rgba(165, 131, 200, 0.12);
+    border:1px solid #eadcf3;
+    margin-bottom:20px;
+}
+
+.titulo{
+    font-size:21px;
+    margin-bottom:16px;
+    color:#2f2a4a;
+    font-weight:700;
+}
+
+.card p.info{
+    color:#7f7897;
+    font-size:14px;
+    margin-bottom:18px;
+}
+
+/* TABELA */
+.tabela-wrap{
+    overflow-x:auto;
+    border-radius:18px;
+}
+
+.tabela{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    min-width:700px;
+}
+
+.tabela thead th{
+    text-align:left;
+    background:#f4ecfb;
+    padding:14px 14px;
+    font-size:14px;
+    color:#5a5373;
+    font-weight:700;
+    border-bottom:1px solid #e8dbf3;
+}
+
+.tabela thead th:first-child{
+    border-top-left-radius:14px;
+}
+
+.tabela thead th:last-child{
+    border-top-right-radius:14px;
+}
+
+.tabela tbody tr{
+    background:rgba(255,255,255,0.8);
+    transition:0.2s ease;
+}
+
+.tabela tbody tr:hover{
+    background:#fcf8ff;
+}
+
+.tabela td{
+    padding:14px;
+    border-bottom:1px solid #efe5f6;
+    font-size:14px;
+    color:#6f688a;
+}
+
+.valor{
+    font-weight:700;
+    color:#7e5be9;
+}
+
+/* TOTAL */
+.total-box{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+}
+
+.total-texto{
+    color:#756d90;
+    font-size:15px;
+}
+
+.total{
+    font-size:30px;
+    font-weight:700;
+    color:#7e5be9;
+}
+
+/* VAZIO */
+.vazio{
+    text-align:center;
+    color:#8a82a3;
+    padding:40px 20px;
+    border:2px dashed #e0cdee;
+    border-radius:22px;
+    background:rgba(255,255,255,0.60);
+    font-size:15px;
+}
+
+/* IMPRESSÃO */
+@media print{
+    body{
+        background:white;
+    }
+
+    .topo{
+        box-shadow:none;
+        border-radius:0;
+    }
+
+    .btn-exportar,
+    .menu{
+        display:none !important;
+    }
+
+    .container{
+        max-width:100%;
+        margin:0;
+        padding:20px;
+    }
+
+    .card,
+    .resumo-card{
+        box-shadow:none;
+        border:1px solid #ddd;
+        background:white;
+    }
+}
+
+/* RESPONSIVO */
+@media (max-width: 900px){
+    .resumos{
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width: 700px){
+    .topo h2{
+        font-size:26px;
+    }
+
+    .card,
+    .resumo-card{
+        padding:18px;
+        border-radius:20px;
+    }
+
+    .resumo-valor{
+        font-size:24px;
+    }
+
+    .total{
+        font-size:26px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topo">
+    <h2>Financeiro</h2>
+    <p>Visualize seus faturamentos e acompanhe o desempenho do seu atendimento.</p>
+
+    <div class="menu">
+        <a href="/">Agenda</a>
+        <a href="/servicos">Serviços</a>
+        <a href="/clientes">Clientes</a>
+        <a href="/horarios">Horários</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="topo-acoes">
+        <div>
+            <div class="subtitulo">Resumo financeiro do seu painel</div>
+        </div>
+        <button class="btn-exportar" onclick="window.print()">🖨️ Exportar PDF</button>
+    </div>
+
+    <div class="resumos">
+        <div class="resumo-card">
+            <div class="resumo-topo">
+                <div class="icone">💰</div>
+                <div class="resumo-titulo">Total faturado</div>
+            </div>
+            <div class="resumo-valor">R$ {{'%.2f'|format(total)}}</div>
+            <div class="resumo-desc">Valor total somado dos agendamentos faturados.</div>
+        </div>
+
+        <div class="resumo-card">
+            <div class="resumo-topo">
+                <div class="icone">📅</div>
+                <div class="resumo-titulo">Atendimentos</div>
+            </div>
+            <div class="resumo-valor">{{ dados|length }}</div>
+            <div class="resumo-desc">Quantidade de agendamentos registrados no financeiro.</div>
+        </div>
+
+        <div class="resumo-card">
+            <div class="resumo-topo">
+                <div class="icone">📈</div>
+                <div class="resumo-titulo">Resumo do mês</div>
+            </div>
+            <div class="resumo-valor">R$ {{'%.2f'|format(total)}}</div>
+            <div class="resumo-desc">Visão geral do faturamento atual exibido na tela.</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="titulo">Agendamentos faturados</div>
+        <p class="info">Confira abaixo todos os atendimentos já registrados com valor.</p>
+
+        {% if dados and dados|length > 0 %}
+        <div class="tabela-wrap">
+            <table class="tabela">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Serviço</th>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in dados %}
+                    <tr>
+                        <td>{{ d.cliente }}</td>
+                        <td>{{ d.servico }}</td>
+                        <td>{{ d.data }}</td>
+                        <td>{{ d.hora }}</td>
+                        <td class="valor">R$ {{ '%.2f'|format(d.preco) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="vazio">
+            Nenhum faturamento cadastrado ainda.
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="titulo">Total faturado</div>
+
+        <div class="total-box">
+            <div class="total-texto">
+                Soma geral dos valores dos agendamentos exibidos nesta página.
+            </div>
+            <div class="total">
+                R$ {{'%.2f'|format(total)}}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel - {{ config['nome_profissional'] if config else 'AgendaFlow' }}</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8edf2 0%, #f3eefb 100%);
+            color: #43374a;
+            min-height: 100vh;
+            padding-bottom: 110px;
+        }
+
+        .topo {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            padding: 26px 22px 34px;
+            border-bottom-left-radius: 28px;
+            border-bottom-right-radius: 28px;
+            box-shadow: 0 8px 24px rgba(123, 90, 224, 0.18);
+        }
+
+        .marca {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.95;
+        }
+
+        .topo h1 {
+            margin-top: 14px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .topo p {
+            margin-top: 8px;
+            font-size: 14px;
+            opacity: 0.95;
+            max-width: 520px;
+            line-height: 1.5;
+        }
+
+        .conteudo {
+            width: 100%;
+            max-width: 1100px;
+            margin: -10px auto 0;
+            padding: 22px 16px 0;
+        }
+
+        .bloco {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(201, 182, 228, 0.3);
+            border-radius: 26px;
+            padding: 20px;
+            box-shadow: 0 14px 36px rgba(90, 61, 119, 0.08);
+            backdrop-filter: blur(6px);
+            margin-bottom: 18px;
+        }
+
+        .linha-topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #f9e3ec;
+            color: #c85d8f;
+            border: 1px solid #f1cade;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .botao-link {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e78fb3, #a06ae8);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 8px 18px rgba(160, 106, 232, 0.18);
+        }
+
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .resumo-card {
+            background: #fbf8fe;
+            border: 1px solid #eee2f8;
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .resumo-titulo {
+            font-size: 13px;
+            color: #847592;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .resumo-valor {
+            font-size: 28px;
+            font-weight: 800;
+            color: #534270;
+        }
+
+        .atalhos-titulo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #4a3c59;
+            margin-bottom: 16px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .menu-card {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            border-radius: 22px;
+            min-height: 120px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            box-shadow: 0 12px 26px rgba(123, 90, 224, 0.16);
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-3px);
+            opacity: 0.97;
+        }
+
+        .menu-icone {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .menu-texto {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .subinfo {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: 0.92;
+        }
+
+        .link-box {
+            background: #fbf8fe;
+            border: 1px solid #eee2f8;
+            border-radius: 20px;
+            padding: 18px;
+            margin-top: 18px;
+        }
+
+        .link-box .label {
+            color: #867595;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .link-novo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .link-info {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .link-info .valor {
+            font-size: 20px;
+            font-weight: 800;
+            color: #544372;
+            word-break: break-word;
+        }
+
+        .acoes-link {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-link {
+            text-decoration: none;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-abrir {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+        }
+
+        .btn-copiar {
+            background: #efeaf7;
+            color: #5f5175;
+        }
+
+        .btn-whats {
+            background: #25D366;
+            color: white;
+        }
+
+        .nome-studio {
+            margin-top: 10px;
+            display: inline-block;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .acoes-inferiores {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            width: calc(100% - 24px);
+            max-width: 760px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(222, 208, 239, 0.9);
+            border-radius: 24px;
+            padding: 10px;
+            box-shadow: 0 14px 34px rgba(78, 58, 110, 0.14);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            backdrop-filter: blur(8px);
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            text-align: center;
+            padding: 14px 10px;
+            border-radius: 18px;
+            font-weight: 800;
+            color: #756784;
+            background: transparent;
+        }
+
+        .nav-btn.ativo {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
+        }
+
+        @media (max-width: 900px) {
+            .resumo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 560px) {
+            .topo h1 {
+                font-size: 24px;
+            }
+
+            .resumo-grid,
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .resumo-valor {
+                font-size: 24px;
+            }
+
+            .link-info .valor {
+                font-size: 16px;
+            }
+
+            .acoes-inferiores {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .acoes-link {
+                width: 100%;
+            }
+
+            .btn-link {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topo">
+        <div class="marca">AgendaFlow</div>
+        <h1>{{ config['nome_profissional'] if config else 'AgendaFlow' }}</h1>
+        <p>Gerencie sua agenda, clientes, serviços e faturamento em um visual mais moderno e elegante.</p>
+        <div class="nome-studio">
+            Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}
+        </div>
+    </div>
+
+    <div class="conteudo">
+        <div class="bloco">
+            <div class="linha-topo">
+                <span class="badge">Painel principal</span>
+                <a class="botao-link" href="/book" target="_blank">Abrir link da cliente</a>
+            </div>
+
+            <div class="resumo-grid">
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Agendamentos</div>
+                    <div class="resumo-valor">{{ total_agendamentos or 0 }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Clientes</div>
+                    <div class="resumo-valor">{{ total_clientes or 0 }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Serviços</div>
+                    <div class="resumo-valor">{{ total_servicos or 0 }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Faturamento</div>
+                    <div class="resumo-valor">R$ {{ '%.2f'|format(faturamento or 0) }}</div>
+                </div>
+            </div>
+
+            <div class="link-box">
+                <div class="label">Link para agendamento da cliente</div>
+                <div class="label">Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}</div>
+
+                <div class="link-novo">
+                    <div class="link-info">
+                        <div class="valor" id="linkAgendamento"></div>
+                    </div>
+
+                    <div class="acoes-link">
+                        <a href="/book" target="_blank" class="btn-link btn-abrir">Abrir</a>
+                        <button type="button" onclick="copiarLink()" class="btn-link btn-copiar">Copiar</button>
+                        <a href="#" target="_blank" id="btnWhatsapp" class="btn-link btn-whats">WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bloco">
+            <div class="atalhos-titulo">Acessos rápidos</div>
+
+            <div class="menu-grid">
+                <a href="/agenda" class="menu-card">
+                    <div class="menu-icone">📅</div>
+                    <div class="menu-texto">Agenda</div>
+                    <div class="subinfo">Veja seus horários</div>
+                </a>
+
+                <a href="/clientes" class="menu-card">
+                    <div class="menu-icone">👩</div>
+                    <div class="menu-texto">Clientes</div>
+                    <div class="subinfo">Cadastre e consulte</div>
+                </a>
+
+                <a href="/servicos" class="menu-card">
+                    <div class="menu-icone">💅</div>
+                    <div class="menu-texto">Serviços</div>
+                    <div class="subinfo">Valores e duração</div>
+                </a>
+
+                <a href="/financeiro" class="menu-card">
+                    <div class="menu-icone">💰</div>
+                    <div class="menu-texto">Financeiro</div>
+                    <div class="subinfo">Entradas e total</div>
+                </a>
+
+                <a href="/horarios" class="menu-card">
+                    <div class="menu-icone">⏰</div>
+                    <div class="menu-texto">Horários</div>
+                    <div class="subinfo">Disponibilidade</div>
+                </a>
+
+                <a href="/configuracoes" class="menu-card">
+                    <div class="menu-icone">⚙️</div>
+                    <div class="menu-texto">Configurações</div>
+                    <div class="subinfo">Ajustes do sistema</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="acoes-inferiores">
+        <a href="/dashboard" class="nav-btn ativo">Início</a>
+        <a href="/agenda" class="nav-btn">Agenda</a>
+        <a href="/book" class="nav-btn" target="_blank">Link cliente</a>
+        <a href="/logout" class="nav-btn">Sair</a>
+    </div>
+
+    <script>
+        function gerarLink() {
+            const link = window.location.origin + "/book";
+            document.getElementById("linkAgendamento").innerText = link;
+
+            const nomeStudio = "{{ config['nome_profissional'] if config else 'AgendaFlow' }}";
+            const mensagem =
+                "Olá! 💖\n\n" +
+                "Aqui é o *" + nomeStudio + "*.\n" +
+                "Você pode agendar seu horário pelo link abaixo:\n\n" +
+                link + "\n\n" +
+                "Qualquer dúvida estou à disposição! ✨";
+
+            document.getElementById("btnWhatsapp").href =
+                "https://wa.me/?text=" + encodeURIComponent(mensagem);
+        }
+
+        function copiarLink() {
+            const texto = document.getElementById("linkAgendamento").innerText;
+            navigator.clipboard.writeText(texto).then(function() {
+                alert("Link copiado!");
+            }).catch(function() {
+                alert("Não foi possível copiar o link.");
+            });
+        }
+
+        window.onload = gerarLink;
+    </script>
+
+</body>
+</html>

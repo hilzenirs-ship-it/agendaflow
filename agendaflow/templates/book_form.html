@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar horário - AgendaFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <div class="topbar publico">
+            <div>
+                <span class="brand-mini">AgendaFlow</span>
+                <h2 class="page-title">{{ config["nome_profissional"] }}</h2>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <h1 class="public-title">Confirmar agendamento</h1>
+                <p class="subtexto central">
+                    {{ horario["dia"] }} às <strong>{{ horario["horario"] }}</strong>
+                </p>
+
+                <form method="POST">
+                    <input type="text" name="cliente" placeholder="Seu nome" required>
+
+                    <select name="servico" required>
+                        <option value="">Selecione um serviço</option>
+                        {% for s in servicos %}
+                            <option value="{{ s['id'] }}">
+                                {{ s["nome"] }} - R$ {{ "%.2f"|format(s["preco"]) }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <button type="submit" class="botao full">Agendar agora</button>
+                </form>
+
+                <a class="botao secundario full" href="/book">Voltar</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento realizado - AgendaFlow</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f8edf2 0%, #f3eefb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #43374a;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 560px;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #eadff4;
+            border-radius: 28px;
+            padding: 32px 24px;
+            box-shadow: 0 14px 36px rgba(90, 61, 119, 0.10);
+            text-align: center;
+        }
+
+        .selo {
+            width: 78px;
+            height: 78px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            box-shadow: 0 10px 24px rgba(123, 90, 224, 0.18);
+        }
+
+        h1 {
+            font-size: 30px;
+            color: #4a3c59;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 15px;
+            color: #6f617d;
+            line-height: 1.6;
+        }
+
+        .mensagem {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 18px;
+            background: #fbf8fe;
+            border: 1px solid #eadff4;
+        }
+
+        .acoes {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .botao {
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 14px;
+            transition: 0.18s ease;
+            display: inline-block;
+        }
+
+        .botao-primario {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
+        }
+
+        .botao-secundario {
+            background: #f6effb;
+            color: #6d5a82;
+            border: 1px solid #e4d8f1;
+        }
+
+        .botao:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 24px 18px;
+                border-radius: 22px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .acoes {
+                flex-direction: column;
+            }
+
+            .botao {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="selo">✓</div>
+        <h1>Agendamento realizado</h1>
+
+        <div class="mensagem">
+            <p>
+                Seu horário foi solicitado com sucesso.
+                Em caso de necessidade, entre em contato com o atendimento.
+            </p>
+        </div>
+
+        <div class="acoes">
+            <a href="/book" class="botao botao-primario">Fazer novo agendamento</a>
+            <a href="/" class="botao botao-secundario">Voltar</a>
+        </div>
+    </div>
+</body>
+</html>

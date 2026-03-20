@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda - AgendaFlow</title>
+
+    <style>
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+            font-family:Arial,Helvetica,sans-serif;
+        }
+
+        body{
+            background:linear-gradient(135deg,#f8edf2 0%,#f3eefb 100%);
+            color:#43374a;
+            min-height:100vh;
+            padding-bottom:120px;
+        }
+
+        .topo{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+            padding:22px 22px 28px;
+            border-bottom-left-radius:28px;
+            border-bottom-right-radius:28px;
+            box-shadow:0 8px 24px rgba(123,90,224,0.18);
+            position:sticky;
+            top:0;
+            z-index:20;
+        }
+
+        .topo-linha{
+            width:100%;
+            max-width:1280px;
+            margin:0 auto;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:18px;
+            flex-wrap:wrap;
+        }
+
+        .marca-area{
+            display:flex;
+            flex-direction:column;
+            gap:4px;
+        }
+
+        .marca{
+            font-size:22px;
+            font-weight:800;
+            color:white;
+        }
+
+        .submarca{
+            font-size:13px;
+            color:rgba(255,255,255,0.92);
+            font-weight:600;
+        }
+
+        .acoes-topo{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .botao-topo{
+            text-decoration:none;
+            background:rgba(255,255,255,0.18);
+            color:white;
+            border:1px solid rgba(255,255,255,0.22);
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:700;
+            font-size:14px;
+            display:inline-block;
+            transition:0.18s;
+        }
+
+        .botao-topo:hover{
+            background:rgba(255,255,255,0.26);
+        }
+
+        .conteudo{
+            width:100%;
+            max-width:1280px;
+            margin:24px auto 0;
+            padding:0 16px;
+        }
+
+        .painel-dia{
+            background:rgba(255,255,255,0.88);
+            backdrop-filter:blur(10px);
+            -webkit-backdrop-filter:blur(10px);
+            border-radius:28px;
+            padding:22px;
+            box-shadow:0 18px 44px rgba(90,61,119,0.08);
+            margin-bottom:18px;
+            border:1px solid rgba(228,216,241,0.95);
+            position:relative;
+            overflow:hidden;
+        }
+
+        .painel-dia::before{
+            content:"";
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            height:5px;
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+        }
+
+        .linha-conexao{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin:0 0 14px 2px;
+            color:#866f98;
+            font-size:13px;
+            font-weight:700;
+        }
+
+        .linha-conexao .ponto{
+            width:10px;
+            height:10px;
+            border-radius:999px;
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            box-shadow:0 0 0 4px rgba(231,143,179,0.12);
+            flex-shrink:0;
+        }
+
+        .topo-dia{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:18px;
+        }
+
+        .titulo-dia h2{
+            font-size:24px;
+            color:#4a3c59;
+            margin-bottom:6px;
+        }
+
+        .titulo-dia p{
+            color:#7a6d88;
+            font-size:14px;
+            font-weight:600;
+        }
+
+        .tag-hoje{
+            background:#1e2340;
+            color:white;
+            padding:9px 14px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:800;
+            box-shadow:0 8px 16px rgba(30,35,64,0.18);
+        }
+
+        .acoes-dia{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:18px;
+        }
+
+        .botao-acao{
+            text-decoration:none;
+            padding:12px 16px;
+            border-radius:16px;
+            font-weight:800;
+            font-size:14px;
+            transition:0.18s;
+            display:inline-block;
+            border:none;
+        }
+
+        .botao-acao:hover{
+            transform:translateY(-1px);
+        }
+
+        .botao-primario{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+            box-shadow:0 10px 20px rgba(123,90,224,0.18);
+        }
+
+        .botao-secundario{
+            background:#f7f1fb;
+            color:#6d5a82;
+            border:1px solid #eadcf6;
+        }
+
+        .resumo-dia{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:12px;
+            margin-bottom:18px;
+        }
+
+        .card-resumo{
+            background:linear-gradient(180deg,#fdfbff 0%,#f8f2fc 100%);
+            border-radius:20px;
+            padding:16px;
+            border:1px solid #efe5f8;
+            box-shadow:0 8px 20px rgba(90,61,119,0.04);
+        }
+
+        .card-resumo .rotulo{
+            font-size:12px;
+            font-weight:700;
+            color:#8b7d98;
+            margin-bottom:6px;
+        }
+
+        .card-resumo .valor{
+            font-size:22px;
+            font-weight:800;
+            color:#4a3c59;
+            word-break:break-word;
+        }
+
+        .lista-agendamentos-dia{
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+
+        .agendamento-dia{
+            background:linear-gradient(180deg,#fdfbff 0%,#faf6ff 100%);
+            border-radius:20px;
+            padding:16px;
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            border:1px solid #efe5f8;
+            box-shadow:0 8px 18px rgba(90,61,119,0.04);
+        }
+
+        .agendamento-esquerda{
+            display:flex;
+            gap:12px;
+            flex:1;
+            min-width:0;
+        }
+
+        .hora-badge{
+            min-width:76px;
+            text-align:center;
+            background:linear-gradient(135deg,#f4d2df,#eddcf8);
+            color:#4f4262;
+            border-radius:16px;
+            padding:12px 10px;
+            font-size:15px;
+            font-weight:800;
+            height:fit-content;
+        }
+
+        .agendamento-info{
+            min-width:0;
+        }
+
+        .agendamento-info h3{
+            font-size:17px;
+            color:#4a3c59;
+            margin-bottom:6px;
+            word-break:break-word;
+        }
+
+        .agendamento-info p{
+            font-size:14px;
+            color:#776985;
+            margin-bottom:4px;
+            word-break:break-word;
+            line-height:1.45;
+        }
+
+        .acoes-item{
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+            min-width:120px;
+        }
+
+        .status-agenda{
+            background:#f8f3fc;
+            color:#7b5ae0;
+            padding:10px 14px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:800;
+            text-align:center;
+            border:1px solid #ece0f8;
+        }
+
+        .btn-excluir{
+            background:#fff1f1;
+            color:#c5221f;
+            border:1px solid #f3c7c6;
+            padding:8px 12px;
+            border-radius:10px;
+            font-weight:700;
+            font-size:13px;
+            text-decoration:none;
+            text-align:center;
+            transition:0.18s;
+        }
+
+        .btn-excluir:hover{
+            background:#ffe6e6;
+        }
+
+        .vazio-dia{
+            background:linear-gradient(180deg,#fdfbff 0%,#faf6ff 100%);
+            border-radius:22px;
+            padding:22px 18px;
+            text-align:center;
+            color:#7d708b;
+            border:1px dashed #e6d8f2;
+        }
+
+        .vazio-dia h3{
+            margin-bottom:8px;
+            font-size:18px;
+            color:#5a4b71;
+        }
+
+        .vazio-dia p{
+            font-size:14px;
+            line-height:1.5;
+        }
+
+        .barra-calendario{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        }
+
+        .titulo-mes{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            flex-wrap:wrap;
+        }
+
+        .titulo-mes h1{
+            font-size:30px;
+            color:#4a3c59;
+            font-weight:800;
+        }
+
+        .badge-hoje{
+            background:#1e2340;
+            color:white;
+            border:1px solid #1e2340;
+            padding:8px 12px;
+            border-radius:999px;
+            font-size:13px;
+            font-weight:800;
+        }
+
+        .navegacao-mes{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .botao-nav{
+            text-decoration:none;
+            background:white;
+            color:#5f536f;
+            border:1px solid #e7deef;
+            padding:11px 16px;
+            border-radius:999px;
+            font-size:14px;
+            font-weight:800;
+            transition:0.18s;
+            display:inline-block;
+            box-shadow:0 6px 18px rgba(90,61,119,0.05);
+        }
+
+        .botao-nav:hover{
+            background:#faf7ff;
+        }
+
+        .calendario-scroll{
+            width:100%;
+            overflow-x:auto;
+            padding-bottom:4px;
+        }
+
+        .calendario-scroll::-webkit-scrollbar{
+            height:8px;
+        }
+
+        .calendario-scroll::-webkit-scrollbar-thumb{
+            background:#dccdea;
+            border-radius:999px;
+        }
+
+        .calendario-estrutura{
+            min-width:980px;
+        }
+
+        .calendario-bloco{
+            background:white;
+            border:1px solid #eadff4;
+            border-radius:24px;
+            overflow:hidden;
+            box-shadow:0 14px 36px rgba(90,61,119,0.08);
+        }
+
+        .grade-semana{
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            background:linear-gradient(180deg,#faf6fd 0%,#f6effb 100%);
+            border-bottom:1px solid #eee5f6;
+        }
+
+        .dia-semana{
+            padding:14px 8px;
+            border-right:1px solid #eee5f6;
+            text-align:center;
+            font-size:14px;
+            font-weight:800;
+            color:#6c5f7d;
+            min-height:58px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .dia-semana:last-child{
+            border-right:none;
+        }
+
+        .calendario{
+            display:grid;
+            grid-template-columns:repeat(7, 1fr);
+            background:white;
+        }
+
+        .dia{
+            min-height:180px;
+            border-right:1px solid #eee5f6;
+            border-top:1px solid #eee5f6;
+            padding:12px;
+            text-decoration:none;
+            color:inherit;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            transition:0.18s;
+            background:white;
+            position:relative;
+        }
+
+        .dia:hover{
+            background:#fcf9ff;
+        }
+
+        .dia.selecionado{
+            background:#f8f2fc;
+            box-shadow:inset 0 0 0 2px #cf9fe8;
+        }
+
+        .dia:nth-child(7n){
+            border-right:none;
+        }
+
+        .dia.vazio{
+            background:#faf7fb;
+            cursor:default;
+        }
+
+        .dia.vazio:hover{
+            background:#faf7fb;
+        }
+
+        .dia-topo{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:10px;
+        }
+
+        .numero-dia{
+            min-width:78px;
+            height:36px;
+            border-radius:999px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:0 12px;
+            font-size:13px;
+            font-weight:800;
+            color:#4a3c59;
+            background:#f7f1fb;
+            flex-shrink:0;
+            white-space:nowrap;
+        }
+
+        .dia.hoje .numero-dia{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+        }
+
+        .qtd-agenda{
+            font-size:12px;
+            color:#6d5a82;
+            font-weight:800;
+            background:#f6effb;
+            border-radius:999px;
+            padding:6px 10px;
+            white-space:nowrap;
+        }
+
+        .eventos-dia{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            margin-top:2px;
+        }
+
+        .evento{
+            background:#f8f3fc;
+            color:#5a4b71;
+            border-left:4px solid #c88ac2;
+            border-radius:10px;
+            padding:7px 8px;
+            font-size:12px;
+            line-height:1.35;
+            overflow:hidden;
+            word-break:break-word;
+        }
+
+        .evento strong{
+            display:block;
+            font-size:12px;
+            color:#4a3c59;
+            margin-bottom:2px;
+        }
+
+        .sem-eventos{
+            margin-top:auto;
+            font-size:12px;
+            color:#9a90a7;
+        }
+
+        .abrir-dia{
+            margin-top:auto;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:fit-content;
+            padding:8px 12px;
+            border-radius:999px;
+            background:#f6effb;
+            color:#6d5a82;
+            font-size:12px;
+            font-weight:800;
+            transition:0.18s;
+        }
+
+        .dia:hover .abrir-dia,
+        .dia.selecionado .abrir-dia{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+        }
+
+        .legenda{
+            margin-top:18px;
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .item-legenda{
+            background:white;
+            border:1px solid #eee5f6;
+            border-radius:999px;
+            padding:10px 14px;
+            font-size:13px;
+            color:#7a6d88;
+            font-weight:700;
+            box-shadow:0 6px 16px rgba(90,61,119,0.04);
+        }
+
+        .acoes-inferiores{
+            position:fixed;
+            left:50%;
+            bottom:18px;
+            transform:translateX(-50%);
+            width:calc(100% - 24px);
+            max-width:820px;
+            background:white;
+            border-radius:24px;
+            padding:10px;
+            box-shadow:0 14px 34px rgba(78,58,110,0.14);
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:10px;
+            z-index:30;
+        }
+
+        .nav-btn{
+            text-decoration:none;
+            text-align:center;
+            padding:14px 10px;
+            border-radius:18px;
+            font-weight:800;
+            color:#756784;
+            display:block;
+            transition:0.18s;
+        }
+
+        .nav-btn:hover{
+            background:#f7f2fb;
+        }
+
+        .nav-btn.ativo{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+        }
+
+        @media (max-width:900px){
+            .resumo-dia{
+                grid-template-columns:1fr;
+            }
+
+            .agendamento-dia{
+                flex-direction:column;
+            }
+
+            .acoes-item{
+                width:100%;
+                min-width:unset;
+            }
+        }
+
+        @media (max-width:700px){
+            .titulo-mes h1{
+                font-size:24px;
+            }
+
+            .acoes-inferiores{
+                grid-template-columns:1fr;
+            }
+
+            .acoes-dia{
+                flex-direction:column;
+            }
+
+            .acoes-dia .botao-acao{
+                width:100%;
+                text-align:center;
+            }
+
+            .navegacao-mes{
+                width:100%;
+            }
+
+            .navegacao-mes .botao-nav{
+                width:100%;
+                text-align:center;
+            }
+
+            .calendario-estrutura{
+                min-width:900px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topo">
+        <div class="topo-linha">
+            <div class="marca-area">
+                <div class="marca">AgendaFlow</div>
+                <div class="submarca">Calendário mensal</div>
+            </div>
+
+            <div class="acoes-topo">
+                <a href="/dashboard" class="botao-topo">Painel</a>
+                <a href="/clientes" class="botao-topo">Clientes</a>
+                <a href="/financeiro" class="botao-topo">Financeiro</a>
+                <a href="/book" class="botao-topo" target="_blank">Link cliente</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="conteudo">
+
+        {% if data_selecionada %}
+        <div class="painel-dia">
+
+            <div class="linha-conexao">
+                <span class="ponto"></span>
+                <span>Dia selecionado no calendário</span>
+            </div>
+
+            <div class="topo-dia">
+                <div class="titulo-dia">
+                    <h2>{{ nome_dia_semana }} • {{ data_formatada }}</h2>
+                    <p>Veja e gerencie os atendimentos deste dia</p>
+                </div>
+
+                {% if eh_hoje_detalhe %}
+                <div class="tag-hoje">Hoje</div>
+                {% endif %}
+            </div>
+
+            <div class="acoes-dia">
+                <a href="/agenda?mes={{ mes }}&ano={{ ano }}" class="botao-acao botao-secundario">← Fechar dia</a>
+                <a href="/agendar?data={{ data_selecionada }}" class="botao-acao botao-primario">+ Novo agendamento</a>
+            </div>
+
+            <div class="resumo-dia">
+                <div class="card-resumo">
+                    <div class="rotulo">Data</div>
+                    <div class="valor">{{ data_formatada }}</div>
+                </div>
+
+                <div class="card-resumo">
+                    <div class="rotulo">Dia</div>
+                    <div class="valor">{{ nome_dia_semana }}</div>
+                </div>
+
+                <div class="card-resumo">
+                    <div class="rotulo">Agendamentos</div>
+                    <div class="valor">{{ agendamentos_dia|length }}</div>
+                </div>
+            </div>
+
+            {% if agendamentos_dia %}
+            <div class="lista-agendamentos-dia">
+                {% for ag in agendamentos_dia %}
+                <div class="agendamento-dia">
+                    <div class="agendamento-esquerda">
+                        <div class="hora-badge">{{ ag.hora }}</div>
+
+                        <div class="agendamento-info">
+                            <h3>{{ ag.cliente }}</h3>
+
+                            {% if ag.servico %}
+                            <p><strong>Serviço:</strong> {{ ag.servico }}</p>
+                            {% endif %}
+
+                            {% if ag.telefone %}
+                            <p><strong>Telefone:</strong> {{ ag.telefone }}</p>
+                            {% endif %}
+
+                            {% if ag.observacao %}
+                            <p><strong>Obs:</strong> {{ ag.observacao }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="acoes-item">
+                        <div class="status-agenda">Agendado</div>
+                        <a href="/excluir_agendamento/{{ ag.id }}" class="btn-excluir">Excluir</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="vazio-dia">
+                <h3>Nenhum agendamento</h3>
+                <p>Esse dia está livre. Use o botão acima para marcar um cliente.</p>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        <div class="barra-calendario">
+            <div class="titulo-mes">
+                <h1>{{ mes_nome }} {{ ano }}</h1>
+                {% if mes_atual and ano_atual %}
+                <div class="badge-hoje">Mês atual</div>
+                {% endif %}
+            </div>
+
+            <div class="navegacao-mes">
+                <a href="/agenda?mes={{ mes_anterior }}&ano={{ ano_anterior }}" class="botao-nav">← Anterior</a>
+                <a href="/agenda" class="botao-nav">Hoje</a>
+                <a href="/agenda?mes={{ proximo_mes }}&ano={{ proximo_ano }}" class="botao-nav">Próximo →</a>
+            </div>
+        </div>
+
+        <div class="calendario-scroll">
+            <div class="calendario-estrutura">
+                <div class="calendario-bloco">
+                    <div class="grade-semana">
+                        <div class="dia-semana">Seg</div>
+                        <div class="dia-semana">Ter</div>
+                        <div class="dia-semana">Qua</div>
+                        <div class="dia-semana">Qui</div>
+                        <div class="dia-semana">Sex</div>
+                        <div class="dia-semana">Sáb</div>
+                        <div class="dia-semana">Dom</div>
+                    </div>
+
+                    {% set nomes_semana_compactos = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] %}
+
+                    <div class="calendario">
+                        {% for semana in calendario %}
+                            {% for dia in semana %}
+                                {% if dia == 0 %}
+                                    <div class="dia vazio"></div>
+                                {% else %}
+                                    {% set data_formatada_loop = "%04d-%02d-%02d"|format(ano, mes, dia) %}
+                                    {% set eventos = agendamentos_por_dia.get(data_formatada_loop, []) %}
+                                    {% set hoje_data = hoje if hoje is defined else "" %}
+
+                                    <a href="/agenda?mes={{ mes }}&ano={{ ano }}&data={{ data_formatada_loop }}"
+                                       class="dia {% if hoje_data == data_formatada_loop %}hoje{% endif %} {% if data_selecionada == data_formatada_loop %}selecionado{% endif %}">
+                                        <div class="dia-topo">
+                                            <div class="numero-dia">{{ nomes_semana_compactos[loop.index0] }} • {{ dia }}</div>
+
+                                            {% if eventos|length > 0 %}
+                                                <div class="qtd-agenda">{{ eventos|length }} ag.</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="eventos-dia">
+                                            {% for ag in eventos[:3] %}
+                                                <div class="evento">
+                                                    <strong>{{ ag.hora }}</strong>
+                                                    {{ ag.cliente }}
+                                                </div>
+                                            {% endfor %}
+
+                                            {% if eventos|length > 3 %}
+                                                <div class="evento">
+                                                    + {{ eventos|length - 3 }} outro(s)
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if eventos|length == 0 %}
+                                            <div class="sem-eventos">Dia livre</div>
+                                        {% endif %}
+
+                                        <div class="abrir-dia">
+                                            {% if data_selecionada == data_formatada_loop %}
+                                                Dia aberto
+                                            {% else %}
+                                                Abrir dia →
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legenda">
+            <div class="item-legenda">Clique no dia para abrir os detalhes</div>
+            <div class="item-legenda">Gradiente = hoje</div>
+            <div class="item-legenda">Card destacado = dia selecionado</div>
+        </div>
+
+    </div>
+
+    <div class="acoes-inferiores">
+        <a href="/dashboard" class="nav-btn">Início</a>
+        <a href="/agenda" class="nav-btn ativo">Agenda</a>
+        <a href="/book" class="nav-btn" target="_blank">Link cliente</a>
+        <a href="/logout" class="nav-btn">Sair</a>
+    </div>
+
+</body>
+</html>

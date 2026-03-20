@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar disponibilidade - AgendaFlow</title>
+
+    <style>
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+            font-family:Arial,Helvetica,sans-serif;
+        }
+
+        body{
+            background:linear-gradient(135deg,#f8edf2 0%,#f3eefb 100%);
+            color:#43374a;
+            min-height:100vh;
+            padding-bottom:40px;
+        }
+
+        .topo{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+            padding:22px 22px 28px;
+            border-bottom-left-radius:28px;
+            border-bottom-right-radius:28px;
+            box-shadow:0 8px 24px rgba(123,90,224,0.18);
+        }
+
+        .topo-linha{
+            width:100%;
+            max-width:1100px;
+            margin:0 auto;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            flex-wrap:wrap;
+        }
+
+        .marca{
+            font-size:22px;
+            font-weight:800;
+        }
+
+        .submarca{
+            margin-top:4px;
+            font-size:13px;
+            color:rgba(255,255,255,0.92);
+            font-weight:600;
+        }
+
+        .topo-acoes{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .botao-topo{
+            text-decoration:none;
+            background:rgba(255,255,255,0.18);
+            color:white;
+            border:1px solid rgba(255,255,255,0.22);
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:700;
+            font-size:14px;
+            transition:0.18s;
+        }
+
+        .botao-topo:hover{
+            background:rgba(255,255,255,0.26);
+        }
+
+        .conteudo{
+            width:100%;
+            max-width:1100px;
+            margin:24px auto 0;
+            padding:0 16px;
+        }
+
+        .card{
+            background:white;
+            border-radius:26px;
+            padding:24px;
+            box-shadow:0 14px 36px rgba(90,61,119,0.08);
+            border:1px solid rgba(225,214,240,0.8);
+        }
+
+        .topo-pagina{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:18px;
+        }
+
+        .titulo-pagina h1{
+            font-size:28px;
+            color:#4a3c59;
+            margin-bottom:6px;
+        }
+
+        .titulo-pagina p{
+            color:#7a6d88;
+            font-size:15px;
+            font-weight:600;
+            line-height:1.5;
+        }
+
+        .tag-data{
+            background:#1e2340;
+            color:white;
+            padding:10px 14px;
+            border-radius:999px;
+            font-size:13px;
+            font-weight:800;
+            white-space:nowrap;
+        }
+
+        .aviso{
+            background:#f6effb;
+            border:1px solid #e5d9f7;
+            padding:16px;
+            border-radius:18px;
+            font-size:14px;
+            margin-bottom:22px;
+            color:#6d5a82;
+            font-weight:600;
+            line-height:1.6;
+        }
+
+        .resumo{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:14px;
+            margin-bottom:24px;
+        }
+
+        .card-resumo{
+            background:#faf7ff;
+            border-radius:20px;
+            padding:18px;
+            border:1px solid #f0e7f8;
+        }
+
+        .card-resumo .rotulo{
+            font-size:13px;
+            font-weight:700;
+            color:#8b7d98;
+            margin-bottom:6px;
+        }
+
+        .card-resumo .valor{
+            font-size:22px;
+            font-weight:800;
+            color:#4a3c59;
+        }
+
+        .bloco{
+            background:#fff;
+            border:1px solid #eadcf6;
+            border-radius:22px;
+            padding:20px;
+            margin-bottom:18px;
+        }
+
+        .bloco h2{
+            font-size:20px;
+            color:#4a3c59;
+            margin-bottom:8px;
+        }
+
+        .bloco p{
+            color:#7a6d88;
+            font-size:14px;
+            line-height:1.6;
+        }
+
+        .opcoes{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:14px;
+            margin-top:18px;
+        }
+
+        .opcao{
+            position:relative;
+        }
+
+        .opcao input[type="radio"]{
+            position:absolute;
+            opacity:0;
+            pointer-events:none;
+        }
+
+        .opcao label{
+            display:block;
+            background:#faf7ff;
+            border:2px solid #eee5f6;
+            border-radius:20px;
+            padding:18px;
+            cursor:pointer;
+            transition:0.18s;
+            min-height:120px;
+        }
+
+        .opcao label strong{
+            display:block;
+            font-size:16px;
+            color:#4a3c59;
+            margin-bottom:8px;
+        }
+
+        .opcao label span{
+            display:block;
+            font-size:14px;
+            color:#776985;
+            line-height:1.5;
+        }
+
+        .opcao input[type="radio"]:checked + label{
+            border-color:#c88ac2;
+            background:#f8f2fc;
+            box-shadow:0 0 0 3px rgba(200,138,194,0.12);
+        }
+
+        .campos-personalizados{
+            display:none;
+            margin-top:18px;
+            background:#faf7ff;
+            border:1px solid #efe5f8;
+            border-radius:18px;
+            padding:18px;
+        }
+
+        .campos-personalizados.ativo{
+            display:block;
+        }
+
+        .grid-horarios{
+            display:grid;
+            grid-template-columns:repeat(2,1fr);
+            gap:14px;
+            margin-top:14px;
+        }
+
+        .campo label{
+            display:block;
+            font-size:14px;
+            font-weight:700;
+            color:#5e516e;
+            margin-bottom:8px;
+        }
+
+        .campo input[type="time"]{
+            width:100%;
+            padding:14px 16px;
+            border-radius:14px;
+            border:1px solid #e6d9f3;
+            background:white;
+            font-size:15px;
+            color:#43374a;
+            outline:none;
+        }
+
+        .campo input[type="time"]:focus{
+            border-color:#caa5ea;
+            box-shadow:0 0 0 3px rgba(202,165,234,0.14);
+        }
+
+        .subtitulo-lista{
+            margin-top:20px;
+            margin-bottom:10px;
+            font-size:15px;
+            font-weight:800;
+            color:#4a3c59;
+        }
+
+        .grade-checkbox{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:12px;
+            margin-top:8px;
+        }
+
+        .horario-item{
+            background:#faf7ff;
+            border:1px solid #efe5f8;
+            border-radius:16px;
+            padding:14px;
+            transition:0.18s;
+        }
+
+        .horario-item.marcado{
+            border-color:#c88ac2;
+            background:#f8f2fc;
+        }
+
+        .horario-item.bloqueado{
+            opacity:0.7;
+        }
+
+        .horario-item.agendado{
+            background:#f4efff;
+            border-color:#d9c8f5;
+        }
+
+        .horario-topo{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+            margin-bottom:10px;
+        }
+
+        .horario-hora{
+            font-size:15px;
+            font-weight:800;
+            color:#4a3c59;
+        }
+
+        .tag-agendado{
+            background:#7b5ae0;
+            color:white;
+            padding:6px 10px;
+            border-radius:999px;
+            font-size:11px;
+            font-weight:800;
+        }
+
+        .check-linha{
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+
+        .check-linha input[type="checkbox"]{
+            width:18px;
+            height:18px;
+            accent-color:#7b5ae0;
+        }
+
+        .check-linha span{
+            font-size:14px;
+            color:#6d5a82;
+            font-weight:700;
+        }
+
+        .mensagem-fechado{
+            margin-top:16px;
+            background:#fff1f1;
+            border:1px solid #f3c7c6;
+            color:#b3261e;
+            padding:16px;
+            border-radius:16px;
+            font-size:14px;
+            font-weight:700;
+            line-height:1.5;
+        }
+
+        .vazio{
+            margin-top:16px;
+            background:#faf7ff;
+            border:1px dashed #e6d8f2;
+            border-radius:18px;
+            padding:22px;
+            text-align:center;
+            color:#7d708b;
+        }
+
+        .acoes{
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-top:26px;
+        }
+
+        .botao{
+            text-decoration:none;
+            padding:14px 18px;
+            border-radius:16px;
+            font-weight:800;
+            font-size:14px;
+            transition:0.18s;
+            display:inline-block;
+            border:none;
+            cursor:pointer;
+        }
+
+        .botao:hover{
+            transform:translateY(-1px);
+        }
+
+        .botao-primario{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+            box-shadow:0 8px 18px rgba(123,90,224,0.18);
+        }
+
+        .botao-secundario{
+            background:#f6effb;
+            color:#6d5a82;
+            border:1px solid #eadcf6;
+        }
+
+        @media (max-width:900px){
+            .resumo{
+                grid-template-columns:1fr;
+            }
+
+            .opcoes{
+                grid-template-columns:1fr;
+            }
+
+            .grade-checkbox{
+                grid-template-columns:repeat(2,1fr);
+            }
+        }
+
+        @media (max-width:640px){
+            .grid-horarios{
+                grid-template-columns:1fr;
+            }
+
+            .grade-checkbox{
+                grid-template-columns:1fr;
+            }
+
+            .acoes{
+                flex-direction:column;
+            }
+
+            .acoes .botao{
+                width:100%;
+                text-align:center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topo">
+        <div class="topo-linha">
+            <div>
+                <div class="marca">AgendaFlow</div>
+                <div class="submarca">Disponibilidade personalizada do dia</div>
+            </div>
+
+            <div class="topo-acoes">
+                <a href="/horarios" class="botao-topo">Horários</a>
+                <a href="/agenda?data={{ data }}" class="botao-topo">Agenda</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="conteudo">
+        <div class="card">
+            <div class="topo-pagina">
+                <div class="titulo-pagina">
+                    <h1>{{ nome_dia_semana }} • {{ data_formatada }}</h1>
+                    <p>
+                        Ajuste só este dia sem mexer no seu horário semanal inteiro.
+                    </p>
+                </div>
+
+                <div class="tag-data">Data: {{ data_formatada }}</div>
+            </div>
+
+            <div class="aviso">
+                O sistema sempre segue primeiro o seu <strong>horário semanal padrão</strong>.  
+                Esta tela só serve quando você quiser fazer uma <strong>exceção neste dia</strong>, como fechar, reduzir, aumentar ou bloquear horários específicos.
+            </div>
+
+            <div class="resumo">
+                <div class="card-resumo">
+                    <div class="rotulo">Dia</div>
+                    <div class="valor">{{ nome_dia_semana }}</div>
+                </div>
+
+                <div class="card-resumo">
+                    <div class="rotulo">Data</div>
+                    <div class="valor">{{ data_formatada }}</div>
+                </div>
+
+                <div class="card-resumo">
+                    <div class="rotulo">Modo atual</div>
+                    <div class="valor">
+                        {% if dia_fechado %}
+                            Fechado
+                        {% elif acao_dia == 'personalizado' %}
+                            Personalizado
+                        {% else %}
+                            Padrão semanal
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST">
+                <div class="bloco">
+                    <h2>Como este dia deve funcionar?</h2>
+                    <p>
+                        Escolha abaixo se este dia vai seguir o horário semanal normal, se ficará fechado, ou se terá um horário personalizado só para esta data.
+                    </p>
+
+                    <div class="opcoes">
+                        <div class="opcao">
+                            <input
+                                type="radio"
+                                name="acao_dia"
+                                id="acao_aberto"
+                                value="aberto"
+                                {% if acao_dia != 'fechado' and acao_dia != 'personalizado' %}checked{% endif %}
+                            >
+                            <label for="acao_aberto">
+                                <strong>Usar padrão semanal</strong>
+                                <span>
+                                    Remove qualquer personalização deste dia e faz o sistema voltar a usar o horário semanal normal.
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="opcao">
+                            <input
+                                type="radio"
+                                name="acao_dia"
+                                id="acao_fechado"
+                                value="fechado"
+                                {% if acao_dia == 'fechado' %}checked{% endif %}
+                            >
+                            <label for="acao_fechado">
+                                <strong>Fechar este dia</strong>
+                                <span>
+                                    Nenhum horário novo ficará disponível para este dia. Agendamentos já feitos continuam visíveis.
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="opcao">
+                            <input
+                                type="radio"
+                                name="acao_dia"
+                                id="acao_personalizado"
+                                value="personalizado"
+                                {% if acao_dia == 'personalizado' %}checked{% endif %}
+                            >
+                            <label for="acao_personalizado">
+                                <strong>Usar horário personalizado</strong>
+                                <span>
+                                    Defina um intervalo diferente só para esta data e marque quais horários estarão liberados.
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="camposPersonalizados" class="campos-personalizados {% if acao_dia == 'personalizado' %}ativo{% endif %}">
+                        <strong style="display:block; margin-bottom:6px; color:#4a3c59;">
+                            Intervalo deste dia
+                        </strong>
+                        <p style="margin-bottom:14px;">
+                            Escolha o começo e o fim do expediente personalizado deste dia.
+                        </p>
+
+                        <div class="grid-horarios">
+                            <div class="campo">
+                                <label for="hora_inicio_personalizada">Hora de início</label>
+                                <input
+                                    type="time"
+                                    id="hora_inicio_personalizada"
+                                    name="hora_inicio_personalizada"
+                                    value="{{ hora_inicio_personalizada }}"
+                                >
+                            </div>
+
+                            <div class="campo">
+                                <label for="hora_fim_personalizada">Hora de fim</label>
+                                <input
+                                    type="time"
+                                    id="hora_fim_personalizada"
+                                    name="hora_fim_personalizada"
+                                    value="{{ hora_fim_personalizada }}"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="subtitulo-lista">
+                            Horários liberados para agendamento
+                        </div>
+
+                        {% if horarios_tela %}
+                            <div class="grade-checkbox">
+                                {% for item in horarios_tela %}
+                                    <div class="horario-item
+                                        {% if item.status == 'livre' %}marcado{% endif %}
+                                        {% if item.status == 'bloqueado' %}bloqueado{% endif %}
+                                        {% if item.agendado %}agendado{% endif %}
+                                    ">
+                                        <div class="horario-topo">
+                                            <div class="horario-hora">{{ item.hora }}</div>
+                                            {% if item.agendado %}
+                                                <div class="tag-agendado">Agendado</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <label class="check-linha">
+                                            <input
+                                                type="checkbox"
+                                                name="horarios"
+                                                value="{{ item.hora }}"
+                                                {% if item.status == 'livre' or item.agendado %}checked{% endif %}
+                                                {% if item.agendado %}disabled{% endif %}
+                                            >
+                                            <span>
+                                                {% if item.agendado %}
+                                                    Horário ocupado
+                                                {% else %}
+                                                    Deixar disponível
+                                                {% endif %}
+                                            </span>
+                                        </label>
+
+                                        {% if item.agendado %}
+                                            <input type="hidden" name="horarios" value="{{ item.hora }}">
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="vazio">
+                                Ainda não há horários para mostrar aqui.<br>
+                                No modo personalizado, defina primeiro o horário inicial e final e depois salve.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if dia_fechado %}
+                        <div class="mensagem-fechado">
+                            Este dia está marcado como fechado. Para voltar ao normal, selecione <strong>Usar padrão semanal</strong> e salve.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="acoes">
+                    <a href="/horarios" class="botao botao-secundario">← Voltar para horários</a>
+                    <a href="/agenda?data={{ data }}" class="botao botao-secundario">Ver agenda do dia</a>
+                    <button type="submit" class="botao botao-primario">Salvar disponibilidade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const radioAberto = document.getElementById("acao_aberto");
+        const radioFechado = document.getElementById("acao_fechado");
+        const radioPersonalizado = document.getElementById("acao_personalizado");
+        const camposPersonalizados = document.getElementById("camposPersonalizados");
+
+        function atualizarCampos() {
+            if (radioPersonalizado.checked) {
+                camposPersonalizados.classList.add("ativo");
+            } else {
+                camposPersonalizados.classList.remove("ativo");
+            }
+        }
+
+        radioAberto.addEventListener("change", atualizarCampos);
+        radioFechado.addEventListener("change", atualizarCampos);
+        radioPersonalizado.addEventListener("change", atualizarCampos);
+
+        atualizarCampos();
+    </script>
+
+</body>
+</html>

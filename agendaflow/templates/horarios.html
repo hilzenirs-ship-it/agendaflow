@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horários - AgendaFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .topo-explicativo{
+            background: linear-gradient(135deg,#f7eef8,#f3eefb);
+            border:1px solid #eadcf6;
+            border-radius:20px;
+            padding:18px;
+            margin-bottom:20px;
+            color:#6d5a82;
+            line-height:1.6;
+        }
+
+        .secao-horarios{
+            margin-top:22px;
+        }
+
+        .secao-titulo{
+            font-size:22px;
+            color:#4a3c59;
+            margin-bottom:8px;
+        }
+
+        .secao-subtexto{
+            color:#7a6d88;
+            font-size:14px;
+            line-height:1.6;
+            margin-bottom:18px;
+        }
+
+        .bloco-separador{
+            margin:28px 0;
+            height:1px;
+            background:linear-gradient(to right, transparent, #e9def5, transparent);
+        }
+
+        .card-destaque-horarios{
+            background:#fff;
+            border:1px solid #eadcf6;
+            border-radius:22px;
+            padding:18px;
+            box-shadow:0 10px 25px rgba(90,61,119,0.05);
+            margin-bottom:18px;
+        }
+
+        .titulo-card-interno{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+        }
+
+        .titulo-card-interno h3{
+            margin:0;
+            font-size:18px;
+            color:#4a3c59;
+        }
+
+        .badge-personalizado{
+            background:#1e2340;
+            color:white;
+            padding:8px 12px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:800;
+        }
+
+        .grid-personalizado{
+            display:grid;
+            grid-template-columns:1.15fr 1fr;
+            gap:18px;
+            align-items:start;
+        }
+
+        .caixa-suave{
+            background:#faf7ff;
+            border:1px solid #efe5f8;
+            border-radius:18px;
+            padding:16px;
+        }
+
+        .caixa-suave strong{
+            color:#4a3c59;
+        }
+
+        .lista-mini{
+            margin-top:10px;
+            padding-left:18px;
+            color:#776985;
+            line-height:1.7;
+            font-size:14px;
+        }
+
+        .form-personalizado{
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+
+        .form-personalizado label{
+            font-size:14px;
+            font-weight:700;
+            color:#5e516e;
+            margin-bottom:4px;
+            display:block;
+        }
+
+        .campo-data{
+            width:100%;
+            padding:14px 16px;
+            border-radius:14px;
+            border:1px solid #e6d9f3;
+            background:white;
+            font-size:15px;
+            color:#43374a;
+            outline:none;
+        }
+
+        .campo-data:focus{
+            border-color:#caa5ea;
+            box-shadow:0 0 0 3px rgba(202,165,234,0.14);
+        }
+
+        .acoes-personalizado{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top:4px;
+        }
+
+        .botao-gradiente{
+            background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+            color:white;
+            border:none;
+            border-radius:16px;
+            padding:14px 18px;
+            font-size:14px;
+            font-weight:800;
+            cursor:pointer;
+            text-decoration:none;
+            display:inline-block;
+            text-align:center;
+            transition:0.18s;
+            box-shadow:0 8px 18px rgba(123,90,224,0.18);
+        }
+
+        .botao-gradiente:hover{
+            transform:translateY(-1px);
+        }
+
+        .botao-claro{
+            background:#f6effb;
+            color:#6d5a82;
+            border:1px solid #eadcf6;
+            border-radius:16px;
+            padding:14px 18px;
+            font-size:14px;
+            font-weight:800;
+            cursor:pointer;
+            text-decoration:none;
+            display:inline-block;
+            text-align:center;
+            transition:0.18s;
+        }
+
+        .botao-claro:hover{
+            background:#f1e9fa;
+        }
+
+        .aviso-importante{
+            margin-top:16px;
+            background:#f8f3fc;
+            border:1px solid #ece0f8;
+            border-radius:16px;
+            padding:14px;
+            color:#6d5a82;
+            font-size:14px;
+            line-height:1.6;
+        }
+
+        .vazio-personalizado{
+            background:#faf7ff;
+            border:1px dashed #e6d8f2;
+            border-radius:18px;
+            padding:18px;
+            color:#7d708b;
+            text-align:center;
+        }
+
+        @media (max-width: 860px){
+            .grid-personalizado{
+                grid-template-columns:1fr;
+            }
+
+            .acoes-personalizado{
+                flex-direction:column;
+            }
+
+            .acoes-personalizado a,
+            .acoes-personalizado button{
+                width:100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="topbar">
+            <div>
+                <span class="brand-mini">AgendaFlow</span>
+                <h2 class="page-title">Horário semanal da profissional</h2>
+            </div>
+        </div>
+
+        <div class="container grande">
+            <div class="card">
+                <p class="subtexto central">
+                    Defina aqui o horário fixo de atendimento da semana. Esse será o horário padrão usado no link de agendamento das clientes ao longo do mês.
+                </p>
+
+                <div class="cliente-card" style="margin-bottom: 18px;">
+                    <strong>Como essa agenda funciona:</strong><br><br>
+                    1. Você cadastra aqui o seu <strong>horário fixo semanal</strong>.<br>
+                    2. Esse horário vira a <strong>base automática</strong> do seu mês inteiro.<br>
+                    3. Depois, em <strong>disponibilidade personalizada</strong>, você pode <strong>fechar um dia</strong>, <strong>abrir horários diferentes</strong> ou <strong>bloquear horários específicos</strong> sem mexer na semana toda.
+                </div>
+
+                <div class="secao-horarios">
+                    <h3 class="secao-titulo">Horário padrão da semana</h3>
+                    <p class="secao-subtexto">
+                        Esse é o horário fixo que o sistema usa automaticamente no link da cliente e também como base da agenda.
+                    </p>
+
+                    <form method="POST" action="{{ url_for('horarios') }}">
+                        <select name="dia_semana" required>
+                            <option value="">Selecione o dia da semana</option>
+                            <option value="Segunda">Segunda-feira</option>
+                            <option value="Terça">Terça-feira</option>
+                            <option value="Quarta">Quarta-feira</option>
+                            <option value="Quinta">Quinta-feira</option>
+                            <option value="Sexta">Sexta-feira</option>
+                            <option value="Sábado">Sábado</option>
+                            <option value="Domingo">Domingo</option>
+                        </select>
+
+                        <input type="time" name="hora_inicio" required>
+                        <input type="time" name="hora_fim" required>
+
+                        <button type="submit" class="botao full">Salvar horário semanal</button>
+                    </form>
+
+                    <div class="lista-horarios" style="margin-top: 22px;">
+                        {% for h in horarios %}
+                            <div class="cliente-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+                                    <div>
+                                        <strong>{{ h["dia_semana"] }}</strong><br>
+                                        Atendimento padrão: {{ h["hora_inicio"] }} às {{ h["hora_fim"] }}
+                                    </div>
+
+                                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                        <a href="{{ url_for('excluir_horario', id=h['id']) }}"
+                                           class="botao secundario"
+                                           onclick="return confirm('Tem certeza que deseja remover este horário semanal?')">
+                                            Excluir
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="cliente-card">
+                                Nenhum horário semanal cadastrado ainda.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="bloco-separador"></div>
+
+                <div class="secao-horarios">
+                    <div class="titulo-card-interno">
+                        <h3 class="secao-titulo" style="margin-bottom:0;">Disponibilidade personalizada por dia</h3>
+                        <span class="badge-personalizado">Opcional</span>
+                    </div>
+
+                    <p class="secao-subtexto">
+                        Aqui você ajusta um dia específico sem alterar a sua semana inteira. O horário semanal continua sendo o padrão do sistema, e a personalização só vale para a data escolhida.
+                    </p>
+
+                    <div class="card-destaque-horarios">
+                        <div class="grid-personalizado">
+                            <div class="caixa-suave">
+                                <strong>Quando usar essa opção:</strong>
+                                <ul class="lista-mini">
+                                    <li>quando quiser atender em horário diferente em um dia específico</li>
+                                    <li>quando precisar bloquear um dia</li>
+                                    <li>quando quiser liberar apenas alguns horários</li>
+                                    <li>quando tiver feriado, folga ou encaixe especial</li>
+                                </ul>
+
+                                <div class="aviso-importante">
+                                    <strong>Importante:</strong> se você <strong>não personalizar uma data</strong>, o sistema usa normalmente o seu <strong>horário semanal padrão</strong>. Ou seja: a agenda da cliente continua funcionando sem precisar mexer aqui todos os dias.
+                                </div>
+                            </div>
+
+                            <div class="caixa-suave">
+                                <form class="form-personalizado" onsubmit="abrirDisponibilidadePersonalizada(event)">
+                                    <div>
+                                        <label for="data_personalizada">Escolha a data que deseja editar</label>
+                                        <input
+                                            type="date"
+                                            id="data_personalizada"
+                                            name="data_personalizada"
+                                            class="campo-data"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="acoes-personalizado">
+                                        <button type="submit" class="botao-gradiente">
+                                            Editar disponibilidade do dia
+                                        </button>
+
+                                        <a href="/agenda" class="botao-claro">
+                                            Ver agenda
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cliente-card" style="margin-top: 18px;">
+                        <strong>Exemplo prático:</strong><br>
+                        Seu horário padrão de terça é das 09:00 às 18:00. Mas em uma terça específica você quer atender só das 13:00 às 17:00. Então você entra aqui, escolhe a data e faz o ajuste somente naquele dia.
+                    </div>
+
+                    <div class="cliente-card" style="margin-top: 18px;">
+                        <strong>Fluxo ideal do sistema:</strong><br><br>
+                        1. O <strong>horário semanal</strong> fica salvo aqui como base.<br>
+                        2. A cliente agenda normalmente usando essa base.<br>
+                        3. Só quando você quiser mudar um dia específico, usa a <strong>disponibilidade personalizada</strong>.<br>
+                        4. Essa alteração vale só para o dia escolhido e não bagunça os outros dias.
+                    </div>
+                </div>
+
+                <div class="cliente-card" style="margin-top: 18px;">
+                    <strong>Exemplo:</strong><br>
+                    Se você cadastrar segunda-feira das 09:00 às 18:00, toda segunda do mês ficará disponível nesse horário no link da cliente, a menos que você faça um ajuste específico naquele dia.
+                </div>
+
+                <div class="cliente-card" style="margin-top: 18px;">
+                    <strong>Importante:</strong><br>
+                    Cada profissional pode cadastrar o seu próprio horário semanal. Assim, cada salão ou profissional atende conforme a própria rotina de trabalho.
+                </div>
+
+                <a class="botao secundario full" href="/dashboard">Voltar</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function abrirDisponibilidadePersonalizada(event) {
+            event.preventDefault();
+
+            const campoData = document.getElementById('data_personalizada');
+            const data = campoData.value;
+
+            if (!data) {
+                alert('Selecione uma data para editar a disponibilidade.');
+                return;
+            }
+
+            window.location.href = `/agenda/dia/${data}/disponibilidade`;
+        }
+    </script>
+</body>
+</html>

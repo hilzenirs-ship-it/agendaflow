@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar horário - AgendaFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <div class="topbar publico">
+            <div>
+                <span class="brand-mini">AgendaFlow</span>
+                <h2 class="page-title">{{ config["nome_profissional"] }}</h2>
+            </div>
+        </div>
+
+        <div class="container grande">
+            <div class="card">
+                <h1 class="public-title">Escolha seu horário</h1>
+                <div class="hero-badge">Agendamento online</div>
+<p class="subtexto central">Escolha o melhor horário disponível e confirme em poucos segundos.</p>
+
+                {% set ns = namespace(dia_atual='') %}
+
+                <div class="lista-horarios">
+                    {% for h in agenda %}
+                        {% if ns.dia_atual != h["dia"] %}
+                            <h2 class="dia-titulo">{{ h["dia"] }}</h2>
+                            {% set ns.dia_atual = h["dia"] %}
+                        {% endif %}
+
+                        <a class="horario livre" href="/book/{{ h['id'] }}">
+                            <div>
+                                <strong>{{ h["horario"] }}</strong><br>
+                                <small>Disponível</small>
+                            </div>
+                            <span class="pill pill-livre">Reservar</span>
+                        </a>
+                    {% else %}
+                        <div class="cliente-card">Nenhum horário disponível no momento.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

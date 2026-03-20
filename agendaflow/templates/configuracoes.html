@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - AgendaFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <div class="topbar">
+            <div>
+                <span class="brand-mini">AgendaFlow</span>
+                <h2 class="page-title">Configurações</h2>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <p class="subtexto central">Personalize seu aplicativo</p>
+
+                <form method="POST">
+                    <input type="text" name="nome_profissional" placeholder="Nome do studio" value="{{ config['nome_profissional'] }}" required>
+                    <input type="text" name="whatsapp" placeholder="WhatsApp com DDD e país" value="{{ config['whatsapp'] }}" required>
+
+                    <button type="submit" class="botao full">Salvar configurações</button>
+                </form>
+
+                <a class="botao secundario full" href="/dashboard">Voltar</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

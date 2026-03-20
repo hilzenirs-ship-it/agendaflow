@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar horário - AgendaFlow</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8edf2 0%, #f3eefb 100%);
+            min-height: 100vh;
+            color: #43374a;
+        }
+
+        .topo {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            padding: 28px 20px 34px;
+            border-bottom-left-radius: 28px;
+            border-bottom-right-radius: 28px;
+            box-shadow: 0 10px 28px rgba(123, 90, 224, 0.16);
+        }
+
+        .marca {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.95;
+        }
+
+        .topo h1 {
+            margin-top: 10px;
+            font-size: 30px;
+            font-weight: 800;
+        }
+
+        .topo p {
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            opacity: 0.96;
+            max-width: 760px;
+        }
+
+        .conteudo {
+            width: 100%;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 22px 16px 40px;
+        }
+
+        .card-principal {
+            background: rgba(255,255,255,0.95);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 14px 36px rgba(90, 61, 119, 0.08);
+            border: 1px solid rgba(222, 208, 239, 0.8);
+        }
+
+        .subtexto {
+            text-align: center;
+            color: #6f617d;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 22px;
+        }
+
+        .box-erro {
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid #f3b7b7;
+            background: #fff1f1;
+            color: #b42318;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .etapa {
+            background: #fcf9ff;
+            border: 1px solid #eadff4;
+            border-radius: 22px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .etapa-topo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .numero {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .etapa h2 {
+            font-size: 19px;
+            color: #4a3c59;
+        }
+
+        .etapa p {
+            color: #7a6d88;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .campo {
+            margin-bottom: 14px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 7px;
+            color: #6f617d;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .campo input,
+        .campo select {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 14px;
+            border: 1px solid #dfd3ed;
+            background: white;
+            font-size: 14px;
+            color: #43374a;
+            outline: none;
+        }
+
+        .campo input:focus,
+        .campo select:focus {
+            border-color: #b99ae6;
+            box-shadow: 0 0 0 3px rgba(123, 90, 224, 0.10);
+        }
+
+        .botao {
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 14px;
+            transition: 0.18s ease;
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
+        }
+
+        .botao:hover {
+            transform: translateY(-2px);
+        }
+
+        .botao:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .resumo {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 18px;
+            background: #fbf8fe;
+            border: 1px solid #eadff4;
+            color: #6f617d;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .resumo strong {
+            color: #4a3c59;
+        }
+
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .destaque-horarios {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee3f7;
+            word-break: break-word;
+        }
+
+        .observacao {
+            margin-top: 18px;
+            padding: 15px 16px;
+            border-radius: 16px;
+            background: #fff8ef;
+            border: 1px solid #f2dfbf;
+            color: #86611c;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .rodape {
+            text-align: center;
+            margin-top: 18px;
+            color: #8a7b98;
+            font-size: 12px;
+        }
+
+        .calendario-box {
+            background: #fff;
+            border: 1px solid #eadff4;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+        }
+
+        .calendario-topo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .calendario-mes {
+            font-size: 17px;
+            font-weight: 800;
+            color: #4a3c59;
+            text-align: center;
+            flex: 1;
+        }
+
+        .nav-mes {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #dfd3ed;
+            background: #fff;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            color: #7b5ae0;
+            transition: 0.18s ease;
+        }
+
+        .nav-mes:hover {
+            background: #f7f1fd;
+            transform: translateY(-1px);
+        }
+
+        .dias-semana {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .dias-semana div {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 800;
+            color: #8a7b98;
+            padding: 6px 0;
+        }
+
+        .grade-calendario {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .dia-calendario {
+            min-height: 52px;
+            border-radius: 14px;
+            border: 1px solid #eadff4;
+            background: #fff;
+            color: #43374a;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.18s ease;
+            position: relative;
+        }
+
+        .dia-calendario:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(123, 90, 224, 0.10);
+        }
+
+        .dia-vazio {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .dia-bloqueado {
+            background: #f4f1f7;
+            color: #baaec7;
+            border-color: #ebe3f2;
+            cursor: not-allowed;
+        }
+
+        .dia-livre {
+            background: #f3fff7;
+            border-color: #b8e7c7;
+            color: #246b45;
+        }
+
+        .dia-ocupado {
+            background: #fff3f3;
+            border-color: #efc0c0;
+            color: #b54747;
+            cursor: not-allowed;
+        }
+
+        .dia-selecionado {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0) !important;
+            color: white !important;
+            border-color: transparent !important;
+            box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
+        }
+
+        .dia-hoje {
+            outline: 2px solid rgba(123, 90, 224, 0.20);
+        }
+
+        .legenda-calendario {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: #6f617d;
+        }
+
+        .legenda-cor {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            flex-shrink: 0;
+        }
+
+        .cor-livre {
+            background: #8ed3a7;
+        }
+
+        .cor-ocupado {
+            background: #efb0b0;
+        }
+
+        .cor-selecionado {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+        }
+
+        .cor-bloqueado {
+            background: #d8cfdf;
+        }
+
+        .data-escolhida-box {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #fbf8fe;
+            border: 1px solid #eadff4;
+            color: #6f617d;
+            font-size: 14px;
+        }
+
+        .data-escolhida-box strong {
+            color: #4a3c59;
+        }
+
+        @media (max-width: 640px) {
+            .topo h1 {
+                font-size: 26px;
+            }
+
+            .card-principal {
+                padding: 16px;
+                border-radius: 22px;
+            }
+
+            .etapa {
+                padding: 14px;
+                border-radius: 18px;
+            }
+
+            .resumo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grade-calendario {
+                gap: 6px;
+            }
+
+            .dia-calendario {
+                min-height: 44px;
+                font-size: 13px;
+                border-radius: 12px;
+            }
+
+            .dias-semana div {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topo">
+        <div class="marca">AgendaFlow</div>
+        <h1>Agendar horário</h1>
+        <p>Escolha a data, o serviço e o melhor horário disponível para o seu atendimento.</p>
+    </div>
+
+    <div class="conteudo">
+        <div class="card-principal">
+            <p class="subtexto">
+                Preencha com calma. Primeiro escolha a data e depois finalize o agendamento.
+            </p>
+
+            {% if erro %}
+                <div class="box-erro">
+                    {{ erro }}
+                </div>
+            {% endif %}
+
+            <div class="etapa">
+                <div class="etapa-topo">
+                    <div class="numero">1</div>
+                    <h2>Escolha a data</h2>
+                </div>
+
+                <p>Selecione o dia desejado no calendário para visualizar os horários disponíveis.</p>
+
+                <form method="GET" action="{{ url_for('agendar') }}" id="form-calendario">
+                    <input type="hidden" name="data" id="dataSelecionadaInput" value="{{ data_selecionada }}">
+
+                    <div class="calendario-box">
+                        <div class="calendario-topo">
+                            <button type="button" class="nav-mes" id="mesAnterior">&#8249;</button>
+                            <div class="calendario-mes" id="tituloMes"></div>
+                            <button type="button" class="nav-mes" id="proximoMes">&#8250;</button>
+                        </div>
+
+                        <div class="dias-semana">
+                            <div>Seg</div>
+                            <div>Ter</div>
+                            <div>Qua</div>
+                            <div>Qui</div>
+                            <div>Sex</div>
+                            <div>Sáb</div>
+                            <div>Dom</div>
+                        </div>
+
+                        <div class="grade-calendario" id="gradeCalendario"></div>
+
+                        <div class="legenda-calendario">
+                            <div class="legenda-item">
+                                <span class="legenda-cor cor-livre"></span>
+                                <span>Dia livre</span>
+                            </div>
+                            <div class="legenda-item">
+                                <span class="legenda-cor cor-ocupado"></span>
+                                <span>Dia lotado</span>
+                            </div>
+                            <div class="legenda-item">
+                                <span class="legenda-cor cor-selecionado"></span>
+                                <span>Selecionado</span>
+                            </div>
+                            <div class="legenda-item">
+                                <span class="legenda-cor cor-bloqueado"></span>
+                                <span>Indisponível</span>
+                            </div>
+                        </div>
+
+                        <div class="data-escolhida-box" id="dataEscolhidaTexto">
+                            <strong>Data selecionada:</strong>
+                            {% if data_selecionada %}
+                                {{ data_selecionada }}
+                            {% else %}
+                                Nenhuma data selecionada
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <button type="submit" class="botao" id="botaoVerHorarios" {% if not data_selecionada %}disabled{% endif %}>
+                            Ver horários disponíveis
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="etapa">
+                <div class="etapa-topo">
+                    <div class="numero">2</div>
+                    <h2>Finalize seu agendamento</h2>
+                </div>
+
+                <p>Depois de escolher a data, informe seus dados e selecione um horário livre.</p>
+
+                <form method="POST" action="{{ url_for('agendar') }}">
+                    <input type="hidden" name="data" value="{{ data_selecionada }}">
+
+                    <div class="campo">
+                        <label for="cliente">Seu nome</label>
+                        <input
+                            id="cliente"
+                            type="text"
+                            name="cliente"
+                            placeholder="Digite seu nome"
+                            value="{{ request.form.get('cliente', '') }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="telefone">Seu telefone / WhatsApp</label>
+                        <input
+                            id="telefone"
+                            type="text"
+                            name="telefone"
+                            placeholder="Digite seu telefone"
+                            value="{{ request.form.get('telefone', '') }}"
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="servico">Serviço</label>
+                        <select name="servico" id="servico" required>
+                            <option value="">Selecione um serviço</option>
+                            {% for s in servicos %}
+                                <option
+                                    value="{{ s['nome'] }}"
+                                    {% if request.form.get('servico', '') == s['nome'] %}selected{% endif %}
+                                >
+                                    {{ s["nome"] }} - R$ {{ "%.2f"|format(s["preco"]) }}{% if s["duracao"] %} - {{ s["duracao"] }}{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label for="hora">Horário</label>
+                        <select name="hora" id="hora" required {% if not data_selecionada %}disabled{% endif %}>
+                            <option value="">
+                                {% if not data_selecionada %}
+                                    Escolha primeiro uma data
+                                {% elif horarios_fixos %}
+                                    Selecione um horário
+                                {% else %}
+                                    Nenhum horário disponível
+                                {% endif %}
+                            </option>
+
+                            {% for h in horarios_fixos %}
+                                <option
+                                    value="{{ h }}"
+                                    {% if request.form.get('hora', '') == h %}selected{% endif %}
+                                >
+                                    {{ h }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="botao"
+                        {% if not data_selecionada or not horarios_fixos %}disabled{% endif %}
+                    >
+                        Confirmar agendamento
+                    </button>
+                </form>
+            </div>
+
+            {% if data_selecionada %}
+                <div class="resumo">
+                    <div class="resumo-grid">
+                        <div>
+                            <strong>Data selecionada:</strong><br>
+                            {{ data_selecionada }}
+                        </div>
+                        <div>
+                            <strong>Horários livres:</strong><br>
+                            {{ horarios_fixos|length }}
+                        </div>
+                    </div>
+
+                    <div class="destaque-horarios">
+                        <strong>Disponíveis neste dia:</strong><br>
+                        {% if horarios_fixos %}
+                            {{ horarios_fixos|join(", ") }}
+                        {% else %}
+                            Nenhum horário disponível para esta data.
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="observacao">
+                Após confirmar, seu pedido de agendamento será enviado. Confira os dados antes de finalizar.
+            </div>
+
+            <div class="rodape">
+                AgendaFlow
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const meses = [
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        ];
+
+        const dataMin = "{{ data_min or '' }}";
+        const dataMax = "{{ data_max or '' }}";
+        const dataSelecionadaInicial = "{{ data_selecionada or '' }}";
+
+        const diasLivres = {{ (dias_livres or [])|tojson }};
+        const diasOcupados = {{ (dias_ocupados or [])|tojson }};
+
+        const gradeCalendario = document.getElementById("gradeCalendario");
+        const tituloMes = document.getElementById("tituloMes");
+        const inputDataSelecionada = document.getElementById("dataSelecionadaInput");
+        const textoDataEscolhida = document.getElementById("dataEscolhidaTexto");
+        const botaoVerHorarios = document.getElementById("botaoVerHorarios");
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        function parseDataLocal(dataStr) {
+            if (!dataStr) return null;
+            const [ano, mes, dia] = dataStr.split("-").map(Number);
+            return new Date(ano, mes - 1, dia);
+        }
+
+        function formatarDataISO(date) {
+            const ano = date.getFullYear();
+            const mes = String(date.getMonth() + 1).padStart(2, "0");
+            const dia = String(date.getDate()).padStart(2, "0");
+            return `${ano}-${mes}-${dia}`;
+        }
+
+        function formatarDataBR(dataStr) {
+            if (!dataStr) return "Nenhuma data selecionada";
+            const [ano, mes, dia] = dataStr.split("-");
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        const minDateObj = parseDataLocal(dataMin);
+        const maxDateObj = parseDataLocal(dataMax);
+
+        let mesAtual;
+        let anoAtual;
+
+        if (dataSelecionadaInicial) {
+            const dataInicial = parseDataLocal(dataSelecionadaInicial);
+            mesAtual = dataInicial.getMonth();
+            anoAtual = dataInicial.getFullYear();
+        } else if (minDateObj) {
+            mesAtual = minDateObj.getMonth();
+            anoAtual = minDateObj.getFullYear();
+        } else {
+            mesAtual = hoje.getMonth();
+            anoAtual = hoje.getFullYear();
+        }
+
+        function dataDentroDoIntervalo(dataObj) {
+            if (minDateObj && dataObj < minDateObj) return false;
+            if (maxDateObj && dataObj > maxDateObj) return false;
+            return true;
+        }
+
+        function atualizarTextoData() {
+            const valor = inputDataSelecionada.value;
+            textoDataEscolhida.innerHTML = `<strong>Data selecionada:</strong> ${formatarDataBR(valor)}`;
+            botaoVerHorarios.disabled = !valor;
+        }
+
+        function criarDiaVazio() {
+            const div = document.createElement("div");
+            div.className = "dia-calendario dia-vazio";
+            return div;
+        }
+
+        function renderizarCalendario() {
+            gradeCalendario.innerHTML = "";
+            tituloMes.textContent = `${meses[mesAtual]} ${anoAtual}`;
+
+            const primeiroDia = new Date(anoAtual, mesAtual, 1);
+            const ultimoDia = new Date(anoAtual, mesAtual + 1, 0);
+            const totalDias = ultimoDia.getDate();
+
+            let primeiroIndice = primeiroDia.getDay();
+            primeiroIndice = primeiroIndice === 0 ? 6 : primeiroIndice - 1;
+
+            for (let i = 0; i < primeiroIndice; i++) {
+                gradeCalendario.appendChild(criarDiaVazio());
+            }
+
+            for (let dia = 1; dia <= totalDias; dia++) {
+                const dataObj = new Date(anoAtual, mesAtual, dia);
+                const dataISO = formatarDataISO(dataObj);
+
+                const botaoDia = document.createElement("button");
+                botaoDia.type = "button";
+                botaoDia.className = "dia-calendario";
+                botaoDia.textContent = dia;
+
+                const foraIntervalo = !dataDentroDoIntervalo(dataObj);
+
+                if (formatarDataISO(dataObj) === formatarDataISO(hoje)) {
+                    botaoDia.classList.add("dia-hoje");
+                }
+
+                if (inputDataSelecionada.value === dataISO) {
+                    botaoDia.classList.add("dia-selecionado");
+                }
+
+                if (foraIntervalo) {
+                    botaoDia.classList.add("dia-bloqueado");
+                    botaoDia.disabled = true;
+                } else if (diasOcupados.includes(dataISO)) {
+                    botaoDia.classList.add("dia-ocupado");
+                    botaoDia.disabled = true;
+                } else if (diasLivres.includes(dataISO)) {
+                    botaoDia.classList.add("dia-livre");
+                    botaoDia.addEventListener("click", () => {
+                        inputDataSelecionada.value = dataISO;
+                        atualizarTextoData();
+                        renderizarCalendario();
+                    });
+                } else {
+                    botaoDia.classList.add("dia-bloqueado");
+                    botaoDia.disabled = true;
+                }
+
+                gradeCalendario.appendChild(botaoDia);
+            }
+        }
+
+        document.getElementById("mesAnterior").addEventListener("click", () => {
+            mesAtual--;
+            if (mesAtual < 0) {
+                mesAtual = 11;
+                anoAtual--;
+            }
+            renderizarCalendario();
+        });
+
+        document.getElementById("proximoMes").addEventListener("click", () => {
+            mesAtual++;
+            if (mesAtual > 11) {
+                mesAtual = 0;
+                anoAtual++;
+            }
+            renderizarCalendario();
+        });
+
+        atualizarTextoData();
+        renderizarCalendario();
+    </script>
+
+</body>
+</html>

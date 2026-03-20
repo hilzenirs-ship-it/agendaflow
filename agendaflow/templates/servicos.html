@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviços - AgendaFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <div class="topbar">
+            <div>
+                <span class="brand-mini">AgendaFlow</span>
+                <h2 class="page-title">Serviços</h2>
+            </div>
+        </div>
+
+        <div class="container grande">
+            <div class="card">
+                <p class="subtexto central">Cadastre e visualize seus serviços</p>
+
+                <form method="POST">
+                    <input type="text" name="nome" placeholder="Nome do serviço" required>
+                    <input type="number" step="0.01" name="preco" placeholder="Preço" required>
+                    <input type="text" name="duracao" placeholder="Duração (ex: 1h, 40min)">
+                    <button type="submit" class="botao full">Cadastrar serviço</button>
+                </form>
+
+                <div class="lista-horarios">
+                    {% for s in servicos %}
+                        <div class="cliente-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+                                <div>
+                                    <strong>{{ s["nome"] }}</strong><br>
+                                    <span>Preço: R$ {{ "%.2f"|format(s["preco"]) }}</span><br>
+                                    {% if s["duracao"] %}
+                                        <span>Duração: {{ s["duracao"] }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                    <a href="{{ url_for('editar_servico', id=s['id']) }}" class="botao">
+                                        Editar
+                                    </a>
+
+                                    <form action="{{ url_for('excluir_servico', id=s['id']) }}" method="POST" style="margin:0;">
+                                        <button
+                                            type="submit"
+                                            class="botao secundario"
+                                            onclick="return confirm('Tem certeza que deseja excluir este serviço?')"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="cliente-card">
+                            Nenhum serviço cadastrado ainda.
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <a class="botao secundario full" href="/dashboard">Voltar</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dia da Agenda - AgendaFlow</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#f8edf2 0%,#f3eefb 100%);
+color:#43374a;
+min-height:100vh;
+padding-bottom:110px;
+}
+
+.topo{
+background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+color:white;
+padding:26px 22px 34px;
+border-bottom-left-radius:28px;
+border-bottom-right-radius:28px;
+box-shadow:0 8px 24px rgba(123,90,224,0.18);
+}
+
+.marca{
+font-size:15px;
+font-weight:800;
+letter-spacing:1px;
+text-transform:uppercase;
+}
+
+.topo h1{
+margin-top:14px;
+font-size:30px;
+font-weight:800;
+}
+
+.acoes-topo{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-top:20px;
+}
+
+.botao-topo{
+text-decoration:none;
+background:rgba(255,255,255,0.18);
+color:white;
+border:1px solid rgba(255,255,255,0.22);
+padding:12px 16px;
+border-radius:14px;
+font-weight:700;
+font-size:14px;
+}
+
+.conteudo{
+width:100%;
+max-width:1100px;
+margin:0 auto;
+padding:22px 16px 0;
+}
+
+.bloco{
+background:white;
+border-radius:26px;
+padding:24px;
+box-shadow:0 14px 36px rgba(90,61,119,0.08);
+}
+
+.topo-dia{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:16px;
+flex-wrap:wrap;
+margin-bottom:10px;
+}
+
+.titulo-dia h2{
+font-size:28px;
+color:#4a3c59;
+margin-bottom:6px;
+}
+
+.titulo-dia p{
+color:#7a6d88;
+font-size:15px;
+font-weight:600;
+}
+
+.tag-hoje{
+background:#1e2340;
+color:white;
+padding:10px 14px;
+border-radius:999px;
+font-size:13px;
+font-weight:800;
+}
+
+.aviso{
+background:#f6effb;
+border:1px solid #e5d9f7;
+padding:14px;
+border-radius:16px;
+font-size:14px;
+margin-bottom:20px;
+color:#6d5a82;
+font-weight:600;
+}
+
+.acoes-dia{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+margin-bottom:24px;
+}
+
+.botao-acao{
+text-decoration:none;
+padding:14px 18px;
+border-radius:16px;
+font-weight:800;
+font-size:14px;
+transition:0.18s;
+}
+
+.botao-primario{
+background:linear-gradient(135deg,#e78fb3,#7b5ae0);
+color:white;
+}
+
+.botao-secundario{
+background:#f6effb;
+color:#6d5a82;
+}
+
+.resumo-dia{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:14px;
+margin-bottom:26px;
+}
+
+.card-resumo{
+background:#faf7ff;
+border-radius:20px;
+padding:18px;
+}
+
+.card-resumo .rotulo{
+font-size:13px;
+font-weight:700;
+color:#8b7d98;
+margin-bottom:6px;
+}
+
+.card-resumo .valor{
+font-size:24px;
+font-weight:800;
+color:#4a3c59;
+}
+
+.lista-agendamentos{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.agendamento-card{
+background:white;
+border-radius:20px;
+padding:18px;
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:18px;
+box-shadow:0 8px 20px rgba(123,90,224,0.06);
+}
+
+.hora-badge{
+min-width:78px;
+text-align:center;
+background:#f4d2df;
+color:#4f4262;
+border-radius:16px;
+padding:12px 10px;
+font-size:15px;
+font-weight:800;
+}
+
+.agendamento-info h3{
+font-size:18px;
+color:#4a3c59;
+margin-bottom:6px;
+}
+
+.agendamento-info p{
+font-size:14px;
+color:#776985;
+margin-bottom:4px;
+}
+
+.acoes-item{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.btn-excluir{
+background:#fff1f1;
+color:#c5221f;
+border:1px solid #f3c7c6;
+padding:8px 12px;
+border-radius:10px;
+font-weight:700;
+font-size:13px;
+text-decoration:none;
+}
+
+.status-agenda{
+background:#f8f3fc;
+color:#7b5ae0;
+padding:10px 14px;
+border-radius:999px;
+font-size:12px;
+font-weight:800;
+}
+
+.vazio{
+background:#faf7ff;
+border-radius:24px;
+padding:38px 24px;
+text-align:center;
+color:#7d708b;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topo">
+<div class="marca">AgendaFlow</div>
+<h1>Agenda do dia</h1>
+
+<div class="acoes-topo">
+<a href="/dashboard" class="botao-topo">Painel</a>
+<a href="/agenda?mes={{ data_obj.month }}&ano={{ data_obj.year }}" class="botao-topo">Voltar para agenda</a>
+<a href="/clientes" class="botao-topo">Clientes</a>
+<a href="/financeiro" class="botao-topo">Financeiro</a>
+</div>
+</div>
+
+<div class="conteudo">
+
+<div class="bloco">
+
+<div class="topo-dia">
+
+<div class="titulo-dia">
+<h2>{{ nome_dia_semana }} • {{ data_formatada }}</h2>
+<p>Gerencie horários e atendimentos deste dia</p>
+</div>
+
+{% if eh_hoje %}
+<div class="tag-hoje">Hoje</div>
+{% endif %}
+
+</div>
+
+<div class="aviso">
+Clique em <strong>Adicionar agendamento</strong> para marcar um cliente ou em <strong>Editar disponibilidade</strong> para abrir/fechar horários.
+</div>
+
+<div class="acoes-dia">
+
+<a href="/agenda?mes={{ data_obj.month }}&ano={{ data_obj.year }}" class="botao-acao botao-secundario">
+← Voltar
+</a>
+
+<a href="/agendar?data={{ data }}" class="botao-acao botao-primario">
++ Novo agendamento
+</a>
+
+<a href="/agenda/dia/{{ data }}/disponibilidade" class="botao-acao botao-secundario">
+Editar disponibilidade
+</a>
+
+</div>
+
+<div class="resumo-dia">
+
+<div class="card-resumo">
+<div class="rotulo">Data</div>
+<div class="valor">{{ data_formatada }}</div>
+</div>
+
+<div class="card-resumo">
+<div class="rotulo">Dia</div>
+<div class="valor">{{ nome_dia_semana }}</div>
+</div>
+
+<div class="card-resumo">
+<div class="rotulo">Agendamentos</div>
+<div class="valor">{{ agendamentos|length }}</div>
+</div>
+
+</div>
+
+{% if agendamentos %}
+
+<div class="lista-agendamentos">
+
+{% for ag in agendamentos %}
+
+<div class="agendamento-card">
+
+<div style="display:flex;gap:14px">
+
+<div class="hora-badge">
+{{ ag.hora }}
+</div>
+
+<div class="agendamento-info">
+
+<h3>{{ ag.cliente }}</h3>
+
+{% if ag.servico %}
+<p><strong>Serviço:</strong> {{ ag.servico }}</p>
+{% endif %}
+
+{% if ag.telefone %}
+<p><strong>Telefone:</strong> {{ ag.telefone }}</p>
+{% endif %}
+
+{% if ag.observacao %}
+<p><strong>Obs:</strong> {{ ag.observacao }}</p>
+{% endif %}
+
+</div>
+
+</div>
+
+<div class="acoes-item">
+
+<div class="status-agenda">
+Agendado
+</div>
+
+<a href="/excluir_agendamento/{{ ag.id }}" class="btn-excluir">
+Excluir
+</a>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="vazio">
+
+<h3>Nenhum agendamento</h3>
+
+<p>
+Esse dia está livre.  
+Clique abaixo para agendar um cliente.
+</p>
+
+<a href="/agendar?data={{ data }}" class="botao-acao botao-primario">
+Agendar neste dia
+</a>
+
+</div>
+
+{% endif %}
+
+</div>
+</div>
+
+</body>
+</html>
