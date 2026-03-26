@@ -5,6 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configurações - AgendaFlow</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .ajuda-campo {
+            font-size: 12px;
+            color: #7a6d86;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .caixa-info {
+            background: #faf6ff;
+            border: 1px solid #eadff4;
+            color: #5f536d;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .caixa-info strong {
+            color: #43374a;
+        }
+    </style>
 </head>
 <body>
     <div class="app-shell">
@@ -19,9 +43,33 @@
             <div class="card">
                 <p class="subtexto central">Personalize seu aplicativo</p>
 
+                <div class="caixa-info">
+                    <strong>Dica:</strong> o número do WhatsApp deve ser salvo no formato internacional,
+                    sem espaço, sem traços e sem parênteses.
+                    <br>
+                    Exemplo: <strong>5516999999999</strong>
+                </div>
+
                 <form method="POST">
-                    <input type="text" name="nome_profissional" placeholder="Nome do studio" value="{{ config['nome_profissional'] }}" required>
-                    <input type="text" name="whatsapp" placeholder="WhatsApp com DDD e país" value="{{ config['whatsapp'] }}" required>
+                    <input
+                        type="text"
+                        name="nome_profissional"
+                        placeholder="Nome do studio"
+                        value="{{ config['nome_profissional'] }}"
+                        required
+                    >
+
+                    <input
+                        type="text"
+                        name="whatsapp"
+                        placeholder="Ex.: 5516999999999"
+                        value="{{ config['whatsapp'] }}"
+                        required
+                    >
+
+                    <div class="ajuda-campo">
+                        Use o número com código do país + DDD + número.
+                    </div>
 
                     <button type="submit" class="botao full">Salvar configurações</button>
                 </form>

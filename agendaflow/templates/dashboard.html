@@ -339,51 +339,6 @@
     </div>
 
     <div class="conteudo">
-        <div class="bloco">
-            <div class="linha-topo">
-                <span class="badge">Painel principal</span>
-                <a class="botao-link" href="/book" target="_blank">Abrir link da cliente</a>
-            </div>
-
-            <div class="resumo-grid">
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Agendamentos</div>
-                    <div class="resumo-valor">{{ total_agendamentos or 0 }}</div>
-                </div>
-
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Clientes</div>
-                    <div class="resumo-valor">{{ total_clientes or 0 }}</div>
-                </div>
-
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Serviços</div>
-                    <div class="resumo-valor">{{ total_servicos or 0 }}</div>
-                </div>
-
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Faturamento</div>
-                    <div class="resumo-valor">R$ {{ '%.2f'|format(faturamento or 0) }}</div>
-                </div>
-            </div>
-
-            <div class="link-box">
-                <div class="label">Link para agendamento da cliente</div>
-                <div class="label">Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}</div>
-
-                <div class="link-novo">
-                    <div class="link-info">
-                        <div class="valor" id="linkAgendamento"></div>
-                    </div>
-
-                    <div class="acoes-link">
-                        <a href="/book" target="_blank" class="btn-link btn-abrir">Abrir</a>
-                        <button type="button" onclick="copiarLink()" class="btn-link btn-copiar">Copiar</button>
-                        <a href="#" target="_blank" id="btnWhatsapp" class="btn-link btn-whats">WhatsApp</a>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="bloco">
             <div class="atalhos-titulo">Acessos rápidos</div>
@@ -426,18 +381,65 @@
                 </a>
             </div>
         </div>
+
+        <div class="bloco">
+            <div class="linha-topo">
+                <span class="badge">Painel principal</span>
+                <a class="botao-link" href="/studio/{{ slug_usuario }}" target="_blank">Abrir link da cliente</a>
+            </div>
+
+            <div class="resumo-grid">
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Agendamentos</div>
+                    <div class="resumo-valor">{{ total_agendamentos or 0 }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Clientes</div>
+                    <div class="resumo-valor">{{ total_clientes or 0 }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Serviços</div>
+                    <div class="resumo-valor">{{ total_servicos or 0 }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Faturamento</div>
+                    <div class="resumo-valor">R$ {{ '%.2f'|format(faturamento or 0) }}</div>
+                </div>
+            </div>
+
+            <div class="link-box">
+                <div class="label">Link para agendamento da cliente</div>
+                <div class="label">Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}</div>
+
+                <div class="link-novo">
+                    <div class="link-info">
+                        <div class="valor" id="linkAgendamento"></div>
+                    </div>
+
+                    <div class="acoes-link">
+                        <a href="/studio/{{ slug_usuario }}" target="_blank" class="btn-link btn-abrir">Abrir</a>
+                        <button type="button" onclick="copiarLink()" class="btn-link btn-copiar">Copiar</button>
+                        <a href="#" target="_blank" id="btnWhatsapp" class="btn-link btn-whats">WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="acoes-inferiores">
         <a href="/dashboard" class="nav-btn ativo">Início</a>
         <a href="/agenda" class="nav-btn">Agenda</a>
-        <a href="/book" class="nav-btn" target="_blank">Link cliente</a>
+        <a href="/studio/{{ slug_usuario }}" class="nav-btn" target="_blank">Link cliente</a>
         <a href="/logout" class="nav-btn">Sair</a>
     </div>
 
     <script>
         function gerarLink() {
-            const link = window.location.origin + "/book";
+            const link = window.location.origin + "/studio/{{ slug_usuario }}";
             document.getElementById("linkAgendamento").innerText = link;
 
             const nomeStudio = "{{ config['nome_profissional'] if config else 'AgendaFlow' }}";

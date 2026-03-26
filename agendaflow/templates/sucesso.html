@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento realizado - AgendaFlow</title>
+    <title>Agendamento realizado - {{ config.nome_profissional if config else 'AgendaFlow' }}</title>
+
     <style>
         * {
             box-sizing: border-box;
@@ -25,12 +26,23 @@
         .card {
             width: 100%;
             max-width: 560px;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.96);
             border: 1px solid #eadff4;
             border-radius: 28px;
             padding: 32px 24px;
             box-shadow: 0 14px 36px rgba(90, 61, 119, 0.10);
             text-align: center;
+        }
+
+        .marca {
+            display: inline-block;
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #f7f1fd;
+            color: #7b5ae0;
+            font-size: 12px;
+            font-weight: 800;
         }
 
         .selo {
@@ -67,6 +79,36 @@
             border: 1px solid #eadff4;
         }
 
+        .mensagem strong {
+            color: #4a3c59;
+        }
+
+        .resumo {
+            margin-top: 18px;
+            background: #fff;
+            border: 1px solid #eadff4;
+            border-radius: 18px;
+            padding: 16px;
+            text-align: left;
+        }
+
+        .resumo h3 {
+            font-size: 16px;
+            color: #4a3c59;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .linha {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #6f617d;
+        }
+
+        .linha strong {
+            color: #4a3c59;
+        }
+
         .acoes {
             margin-top: 24px;
             display: flex;
@@ -83,6 +125,8 @@
             font-size: 14px;
             transition: 0.18s ease;
             display: inline-block;
+            border: none;
+            cursor: pointer;
         }
 
         .botao-primario {
@@ -97,8 +141,20 @@
             border: 1px solid #e4d8f1;
         }
 
+        .botao-whatsapp {
+            background: #25D366;
+            color: white;
+            box-shadow: 0 8px 18px rgba(37, 211, 102, 0.25);
+        }
+
         .botao:hover {
             transform: translateY(-2px);
+        }
+
+        .rodape {
+            margin-top: 18px;
+            font-size: 12px;
+            color: #8a7b98;
         }
 
         @media (max-width: 640px) {
@@ -121,22 +177,56 @@
         }
     </style>
 </head>
+
 <body>
     <div class="card">
+
+        <div class="marca">
+            {{ config.nome_profissional if config else 'AgendaFlow' }}
+        </div>
+
         <div class="selo">✓</div>
+
         <h1>Agendamento realizado</h1>
 
         <div class="mensagem">
             <p>
-                Seu horário foi solicitado com sucesso.
-                Em caso de necessidade, entre em contato com o atendimento.
+                Seu horário foi agendado com sucesso.
+                <strong>Confira os detalhes abaixo e, se desejar, confirme pelo WhatsApp.</strong>
             </p>
         </div>
 
-        <div class="acoes">
-            <a href="/book" class="botao botao-primario">Fazer novo agendamento</a>
-            <a href="/" class="botao botao-secundario">Voltar</a>
+        <div class="resumo">
+            <h3>Resumo do seu agendamento</h3>
+
+            <div class="linha"><strong>Nome:</strong> {{ cliente or 'Não informado' }}</div>
+            <div class="linha"><strong>Serviço:</strong> {{ servico or 'Não informado' }}</div>
+            <div class="linha"><strong>Data:</strong> {{ data_agendamento or 'Não informada' }}</div>
+            <div class="linha"><strong>Horário:</strong> {{ hora_agendamento or 'Não informado' }}</div>
         </div>
+
+        <div class="acoes">
+            <button type="button" class="botao botao-primario" onclick="window.history.back()">
+                Fazer novo agendamento
+            </button>
+
+            <button type="button" class="botao botao-secundario" onclick="window.location.href='/'">
+                Voltar ao início
+            </button>
+
+            {% if config and config.whatsapp %}
+                <a href="https://wa.me/55{{ config.whatsapp }}?text={{ mensagem_whatsapp }}"
+                   class="botao botao-whatsapp"
+                   target="_blank">
+                    Confirmar no WhatsApp
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="rodape">
+            Obrigada por agendar com {{ config.nome_profissional if config else 'AgendaFlow' }}.
+        </div>
+
     </div>
 </body>
 </html>

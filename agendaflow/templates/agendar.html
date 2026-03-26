@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendar horário - AgendaFlow</title>
+    <title>Agendar horário - {{ config.nome_profissional if config else 'AgendaFlow' }}</title>
+
     <style>
         * {
             box-sizing: border-box;
@@ -12,104 +13,141 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
+        :root {
+            --rosa: #e78fb3;
+            --lilas: #7b5ae0;
+            --rosa-claro: #f8edf2;
+            --lilas-claro: #f3eefb;
+            --texto: #43374a;
+            --texto-suave: #7e708d;
+            --borda: #eadff4;
+            --branco: #ffffff;
+            --verde-bg: #f3fff7;
+            --verde-borda: #b8e7c7;
+            --verde-texto: #246b45;
+            --vermelho-bg: #fff3f3;
+            --vermelho-borda: #efc0c0;
+            --vermelho-texto: #b54747;
+            --cinza-bg: #f4f1f7;
+            --cinza-borda: #ebe3f2;
+            --cinza-texto: #baaec7;
+        }
+
         body {
-            background: linear-gradient(135deg, #f8edf2 0%, #f3eefb 100%);
+            background: linear-gradient(135deg, var(--rosa-claro) 0%, var(--lilas-claro) 100%);
+            color: var(--texto);
             min-height: 100vh;
-            color: #43374a;
         }
 
         .topo {
-            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            background: linear-gradient(135deg, var(--rosa), var(--lilas));
             color: white;
-            padding: 28px 20px 34px;
-            border-bottom-left-radius: 28px;
-            border-bottom-right-radius: 28px;
-            box-shadow: 0 10px 28px rgba(123, 90, 224, 0.16);
+            padding: 30px 20px 36px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 12px 28px rgba(123, 90, 224, 0.18);
+        }
+
+        .topo-interno {
+            max-width: 760px;
+            margin: 0 auto;
         }
 
         .marca {
-            font-size: 13px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.95;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.16);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-bottom: 14px;
+            backdrop-filter: blur(4px);
         }
 
         .topo h1 {
-            margin-top: 10px;
-            font-size: 30px;
-            font-weight: 800;
+            font-size: 32px;
+            line-height: 1.1;
+            margin-bottom: 8px;
         }
 
         .topo p {
-            margin-top: 8px;
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 15px;
             opacity: 0.96;
-            max-width: 760px;
+            max-width: 560px;
+            line-height: 1.5;
+        }
+
+        .topo-contato {
+            margin-top: 14px;
+            font-size: 13px;
+            opacity: 0.95;
         }
 
         .conteudo {
-            width: 100%;
-            max-width: 780px;
-            margin: 0 auto;
-            padding: 22px 16px 40px;
+            max-width: 760px;
+            margin: -18px auto 0;
+            padding: 0 16px 28px;
         }
 
         .card-principal {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.94);
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 16px 40px rgba(84, 59, 120, 0.10);
             border-radius: 28px;
-            padding: 24px;
-            box-shadow: 0 14px 36px rgba(90, 61, 119, 0.08);
-            border: 1px solid rgba(222, 208, 239, 0.8);
+            padding: 22px;
+            backdrop-filter: blur(8px);
         }
 
         .subtexto {
-            text-align: center;
-            color: #6f617d;
-            font-size: 15px;
+            color: var(--texto-suave);
+            font-size: 14px;
             line-height: 1.6;
-            margin-bottom: 22px;
+            margin-bottom: 18px;
         }
 
         .box-erro {
-            margin-bottom: 18px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            border: 1px solid #f3b7b7;
             background: #fff1f1;
-            color: #b42318;
+            border: 1px solid #efc9c9;
+            color: #a74646;
+            padding: 13px 14px;
+            border-radius: 16px;
+            margin-bottom: 16px;
             font-size: 14px;
-            line-height: 1.5;
+            font-weight: 600;
         }
 
         .etapa {
-            background: #fcf9ff;
-            border: 1px solid #eadff4;
+            background: #fff;
+            border: 1px solid var(--borda);
             border-radius: 22px;
             padding: 18px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 20px rgba(123, 90, 224, 0.05);
         }
 
         .etapa-topo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 10px;
         }
 
         .numero {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--rosa), var(--lilas));
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 800;
             flex-shrink: 0;
+            box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
         }
 
         .etapa h2 {
@@ -118,116 +156,15 @@
         }
 
         .etapa p {
-            color: #7a6d88;
+            color: var(--texto-suave);
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.55;
             margin-bottom: 14px;
-        }
-
-        .campo {
-            margin-bottom: 14px;
-        }
-
-        .campo label {
-            display: block;
-            margin-bottom: 7px;
-            color: #6f617d;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .campo input,
-        .campo select {
-            width: 100%;
-            padding: 13px 14px;
-            border-radius: 14px;
-            border: 1px solid #dfd3ed;
-            background: white;
-            font-size: 14px;
-            color: #43374a;
-            outline: none;
-        }
-
-        .campo input:focus,
-        .campo select:focus {
-            border-color: #b99ae6;
-            box-shadow: 0 0 0 3px rgba(123, 90, 224, 0.10);
-        }
-
-        .botao {
-            width: 100%;
-            border: none;
-            cursor: pointer;
-            padding: 14px 18px;
-            border-radius: 16px;
-            font-weight: 800;
-            font-size: 14px;
-            transition: 0.18s ease;
-            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
-            color: white;
-            box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
-        }
-
-        .botao:hover {
-            transform: translateY(-2px);
-        }
-
-        .botao:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .resumo {
-            margin-top: 18px;
-            padding: 16px;
-            border-radius: 18px;
-            background: #fbf8fe;
-            border: 1px solid #eadff4;
-            color: #6f617d;
-            line-height: 1.6;
-            font-size: 14px;
-        }
-
-        .resumo strong {
-            color: #4a3c59;
-        }
-
-        .resumo-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .destaque-horarios {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #eee3f7;
-            word-break: break-word;
-        }
-
-        .observacao {
-            margin-top: 18px;
-            padding: 15px 16px;
-            border-radius: 16px;
-            background: #fff8ef;
-            border: 1px solid #f2dfbf;
-            color: #86611c;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .rodape {
-            text-align: center;
-            margin-top: 18px;
-            color: #8a7b98;
-            font-size: 12px;
         }
 
         .calendario-box {
             background: #fff;
-            border: 1px solid #eadff4;
+            border: 1px solid var(--borda);
             border-radius: 20px;
             padding: 16px;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
@@ -258,7 +195,7 @@
             cursor: pointer;
             font-size: 18px;
             font-weight: bold;
-            color: #7b5ae0;
+            color: var(--lilas);
             transition: 0.18s ease;
         }
 
@@ -291,9 +228,9 @@
         .dia-calendario {
             min-height: 52px;
             border-radius: 14px;
-            border: 1px solid #eadff4;
+            border: 1px solid var(--borda);
             background: #fff;
-            color: #43374a;
+            color: var(--texto);
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
@@ -312,27 +249,27 @@
         }
 
         .dia-bloqueado {
-            background: #f4f1f7;
-            color: #baaec7;
-            border-color: #ebe3f2;
+            background: var(--cinza-bg);
+            color: var(--cinza-texto);
+            border-color: var(--cinza-borda);
             cursor: not-allowed;
         }
 
         .dia-livre {
-            background: #f3fff7;
-            border-color: #b8e7c7;
-            color: #246b45;
+            background: var(--verde-bg);
+            border-color: var(--verde-borda);
+            color: var(--verde-texto);
         }
 
         .dia-ocupado {
-            background: #fff3f3;
-            border-color: #efc0c0;
-            color: #b54747;
+            background: var(--vermelho-bg);
+            border-color: var(--vermelho-borda);
+            color: var(--vermelho-texto);
             cursor: not-allowed;
         }
 
         .dia-selecionado {
-            background: linear-gradient(135deg, #e78fb3, #7b5ae0) !important;
+            background: linear-gradient(135deg, var(--rosa), var(--lilas)) !important;
             color: white !important;
             border-color: transparent !important;
             box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
@@ -373,7 +310,7 @@
         }
 
         .cor-selecionado {
-            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            background: linear-gradient(135deg, var(--rosa), var(--lilas));
         }
 
         .cor-bloqueado {
@@ -385,13 +322,179 @@
             padding: 12px 14px;
             border-radius: 14px;
             background: #fbf8fe;
-            border: 1px solid #eadff4;
+            border: 1px solid var(--borda);
             color: #6f617d;
             font-size: 14px;
         }
 
         .data-escolhida-box strong {
             color: #4a3c59;
+        }
+
+        .campos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: 14px;
+        }
+
+        .campo.full {
+            grid-column: 1 / -1;
+        }
+
+        .campo label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #5b4d6a;
+        }
+
+        .campo input,
+        .campo select {
+            width: 100%;
+            border: 1px solid var(--borda);
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px 14px;
+            font-size: 14px;
+            color: var(--texto);
+            outline: none;
+            transition: 0.18s ease;
+        }
+
+        .campo input:focus,
+        .campo select:focus {
+            border-color: #cbb6eb;
+            box-shadow: 0 0 0 4px rgba(123, 90, 224, 0.08);
+        }
+
+        .horarios-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .horario-btn {
+            border: 1px solid #dccff0;
+            background: #fff;
+            color: #5a496d;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.18s ease;
+            min-width: 88px;
+            text-align: center;
+        }
+
+        .horario-btn:hover {
+            background: #f8f3fd;
+            transform: translateY(-1px);
+        }
+
+        .horario-btn.ativo {
+            background: linear-gradient(135deg, var(--rosa), var(--lilas));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 10px 20px rgba(123, 90, 224, 0.18);
+        }
+
+        .horario-vazio {
+            padding: 14px;
+            border-radius: 14px;
+            background: #faf7fd;
+            border: 1px dashed #ddcfee;
+            color: #867691;
+            font-size: 14px;
+        }
+
+        .resumo {
+            background: linear-gradient(180deg, #fff 0%, #fcf9ff 100%);
+            border: 1px solid var(--borda);
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .resumo-topo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .resumo-topo h3 {
+            font-size: 17px;
+            color: #4a3c59;
+        }
+
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .resumo-item {
+            background: #fff;
+            border: 1px solid #eee4f7;
+            border-radius: 16px;
+            padding: 12px 14px;
+        }
+
+        .resumo-item span {
+            display: block;
+            font-size: 12px;
+            color: #8a7b98;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .resumo-item strong {
+            color: #4a3c59;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .botao-principal {
+            width: 100%;
+            border: none;
+            border-radius: 18px;
+            padding: 16px 18px;
+            font-size: 15px;
+            font-weight: 800;
+            color: white;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--rosa), var(--lilas));
+            box-shadow: 0 16px 28px rgba(123, 90, 224, 0.20);
+            transition: 0.18s ease;
+            margin-top: 16px;
+        }
+
+        .botao-principal:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 32px rgba(123, 90, 224, 0.24);
+        }
+
+        .observacao-final {
+            margin-top: 12px;
+            text-align: center;
+            color: #8a7b98;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .rodape {
+            text-align: center;
+            margin-top: 18px;
+            color: #8a7b98;
+            font-size: 12px;
         }
 
         @media (max-width: 640px) {
@@ -409,7 +512,8 @@
                 border-radius: 18px;
             }
 
-            .resumo-grid {
+            .resumo-grid,
+            .campos-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -426,15 +530,26 @@
             .dias-semana div {
                 font-size: 11px;
             }
+
+            .horario-btn {
+                flex: 1 1 calc(50% - 10px);
+                min-width: unset;
+            }
         }
     </style>
 </head>
 <body>
 
     <div class="topo">
-        <div class="marca">AgendaFlow</div>
-        <h1>Agendar horário</h1>
-        <p>Escolha a data, o serviço e o melhor horário disponível para o seu atendimento.</p>
+        <div class="topo-interno">
+            <div class="marca">AgendaFlow • agendamento online</div>
+            <h1>{{ config.nome_profissional if config and config.nome_profissional else 'Agendar horário' }}</h1>
+            <p>Escolha a data, o serviço e o melhor horário disponível para o seu atendimento.</p>
+
+            {% if config and config.whatsapp %}
+                <div class="topo-contato">Contato: {{ config.whatsapp }}</div>
+            {% endif %}
+        </div>
     </div>
 
     <div class="conteudo">
@@ -457,7 +572,7 @@
 
                 <p>Selecione o dia desejado no calendário para visualizar os horários disponíveis.</p>
 
-                <form method="GET" action="{{ url_for('agendar') }}" id="form-calendario">
+                <form method="GET" action="" id="form-calendario">
                     <input type="hidden" name="data" id="dataSelecionadaInput" value="{{ data_selecionada }}">
 
                     <div class="calendario-box">
@@ -486,7 +601,7 @@
                             </div>
                             <div class="legenda-item">
                                 <span class="legenda-cor cor-ocupado"></span>
-                                <span>Dia lotado</span>
+                                <span>Sem horários</span>
                             </div>
                             <div class="legenda-item">
                                 <span class="legenda-cor cor-selecionado"></span>
@@ -494,279 +609,270 @@
                             </div>
                             <div class="legenda-item">
                                 <span class="legenda-cor cor-bloqueado"></span>
-                                <span>Indisponível</span>
+                                <span>Fora do período</span>
                             </div>
                         </div>
 
-                        <div class="data-escolhida-box" id="dataEscolhidaTexto">
-                            <strong>Data selecionada:</strong>
-                            {% if data_selecionada %}
-                                {{ data_selecionada }}
-                            {% else %}
-                                Nenhuma data selecionada
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 14px;">
-                        <button type="submit" class="botao" id="botaoVerHorarios" {% if not data_selecionada %}disabled{% endif %}>
-                            Ver horários disponíveis
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="etapa">
-                <div class="etapa-topo">
-                    <div class="numero">2</div>
-                    <h2>Finalize seu agendamento</h2>
-                </div>
-
-                <p>Depois de escolher a data, informe seus dados e selecione um horário livre.</p>
-
-                <form method="POST" action="{{ url_for('agendar') }}">
-                    <input type="hidden" name="data" value="{{ data_selecionada }}">
-
-                    <div class="campo">
-                        <label for="cliente">Seu nome</label>
-                        <input
-                            id="cliente"
-                            type="text"
-                            name="cliente"
-                            placeholder="Digite seu nome"
-                            value="{{ request.form.get('cliente', '') }}"
-                            required
-                        >
-                    </div>
-
-                    <div class="campo">
-                        <label for="telefone">Seu telefone / WhatsApp</label>
-                        <input
-                            id="telefone"
-                            type="text"
-                            name="telefone"
-                            placeholder="Digite seu telefone"
-                            value="{{ request.form.get('telefone', '') }}"
-                        >
-                    </div>
-
-                    <div class="campo">
-                        <label for="servico">Serviço</label>
-                        <select name="servico" id="servico" required>
-                            <option value="">Selecione um serviço</option>
-                            {% for s in servicos %}
-                                <option
-                                    value="{{ s['nome'] }}"
-                                    {% if request.form.get('servico', '') == s['nome'] %}selected{% endif %}
-                                >
-                                    {{ s["nome"] }} - R$ {{ "%.2f"|format(s["preco"]) }}{% if s["duracao"] %} - {{ s["duracao"] }}{% endif %}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="campo">
-                        <label for="hora">Horário</label>
-                        <select name="hora" id="hora" required {% if not data_selecionada %}disabled{% endif %}>
-                            <option value="">
-                                {% if not data_selecionada %}
-                                    Escolha primeiro uma data
-                                {% elif horarios_fixos %}
-                                    Selecione um horário
-                                {% else %}
-                                    Nenhum horário disponível
-                                {% endif %}
-                            </option>
-
-                            {% for h in horarios_fixos %}
-                                <option
-                                    value="{{ h }}"
-                                    {% if request.form.get('hora', '') == h %}selected{% endif %}
-                                >
-                                    {{ h }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="botao"
-                        {% if not data_selecionada or not horarios_fixos %}disabled{% endif %}
-                    >
-                        Confirmar agendamento
-                    </button>
-                </form>
-            </div>
-
-            {% if data_selecionada %}
-                <div class="resumo">
-                    <div class="resumo-grid">
-                        <div>
-                            <strong>Data selecionada:</strong><br>
-                            {{ data_selecionada }}
-                        </div>
-                        <div>
-                            <strong>Horários livres:</strong><br>
-                            {{ horarios_fixos|length }}
-                        </div>
-                    </div>
-
-                    <div class="destaque-horarios">
-                        <strong>Disponíveis neste dia:</strong><br>
-                        {% if horarios_fixos %}
-                            {{ horarios_fixos|join(", ") }}
-                        {% else %}
-                            Nenhum horário disponível para esta data.
+                        {% if data_selecionada %}
+                            <div class="data-escolhida-box">
+                                <strong>Data escolhida:</strong> <span id="textoDataEscolhida">{{ data_selecionada }}</span>
+                            </div>
                         {% endif %}
                     </div>
-                </div>
-            {% endif %}
-
-            <div class="observacao">
-                Após confirmar, seu pedido de agendamento será enviado. Confira os dados antes de finalizar.
+                </form>
             </div>
 
+            <form method="POST" action="" id="form-agendamento">
+                <input type="hidden" name="data" value="{{ data_selecionada }}">
+                <input type="hidden" name="hora" id="horaSelecionada" value="{{ request.form.get('hora', '') if request else '' }}">
+
+                <div class="etapa">
+                    <div class="etapa-topo">
+                        <div class="numero">2</div>
+                        <h2>Preencha seus dados</h2>
+                    </div>
+
+                    <div class="campos-grid">
+                        <div class="campo full">
+                            <label for="cliente">Nome completo</label>
+                            <input
+                                type="text"
+                                id="cliente"
+                                name="cliente"
+                                value="{{ request.form.get('cliente', '') if request else '' }}"
+                                placeholder="Digite seu nome"
+                                required
+                            >
+                        </div>
+
+                        <div class="campo">
+                            <label for="telefone">Telefone</label>
+                            <input
+                                type="text"
+                                id="telefone"
+                                name="telefone"
+                                value="{{ request.form.get('telefone', '') if request else '' }}"
+                                placeholder="(00) 00000-0000"
+                            >
+                        </div>
+
+                        <div class="campo">
+                            <label for="servico">Serviço</label>
+                            <select id="servico" name="servico" required>
+                                <option value="">Selecione um serviço</option>
+                                {% for s in servicos %}
+                                    <option
+                                        value="{{ s.nome }}"
+                                        {% if (request.form.get('servico', '') if request else '') == s.nome %}selected{% endif %}
+                                    >
+                                        {{ s.nome }}{% if s.preco is not none %} — R$ {{ '%.2f'|format(s.preco)|replace('.', ',') }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="etapa" id="etapa-horarios">
+                    <div class="etapa-topo">
+                        <div class="numero">3</div>
+                        <h2>Escolha o horário</h2>
+                    </div>
+
+                    <p>Os horários abaixo já consideram a disponibilidade atual do salão.</p>
+
+                    {% if data_selecionada %}
+                        {% if horarios_fixos %}
+                            <div class="horarios-grid">
+                                {% set hora_marcada = request.form.get('hora', '') if request else '' %}
+                                {% for hora in horarios_fixos %}
+                                    <button
+                                        type="button"
+                                        class="horario-btn {% if hora_marcada == hora %}ativo{% endif %}"
+                                        data-hora="{{ hora }}"
+                                    >
+                                        {{ hora }}
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="horario-vazio">
+                                Não há horários disponíveis para esta data no momento.
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="horario-vazio">
+                            Escolha uma data primeiro para visualizar os horários.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="resumo">
+                    <div class="resumo-topo">
+                        <div class="numero" style="width:32px;height:32px;font-size:14px;">✓</div>
+                        <h3>Resumo do agendamento</h3>
+                    </div>
+
+                    <div class="resumo-grid">
+                        <div class="resumo-item">
+                            <span>Profissional</span>
+                            <strong>{{ config.nome_profissional if config and config.nome_profissional else 'AgendaFlow' }}</strong>
+                        </div>
+
+                        <div class="resumo-item">
+                            <span>Data</span>
+                            <strong id="resumoData">{{ data_selecionada if data_selecionada else 'Selecione uma data' }}</strong>
+                        </div>
+
+                        <div class="resumo-item">
+                            <span>Horário</span>
+                            <strong id="resumoHora">
+                                {{ request.form.get('hora', '') if request and request.form.get('hora') else 'Selecione um horário' }}
+                            </strong>
+                        </div>
+
+                        <div class="resumo-item">
+                            <span>Serviço</span>
+                            <strong id="resumoServico">
+                                {{ request.form.get('servico', '') if request and request.form.get('servico') else 'Selecione um serviço' }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="botao-principal">
+                        Confirmar agendamento
+                    </button>
+
+                    <div class="observacao-final">
+                        Confira os dados antes de finalizar. Seu horário será reservado após a confirmação.
+                    </div>
+                </div>
+            </form>
+
             <div class="rodape">
-                AgendaFlow
+                Agendamento online • {{ config.nome_profissional if config and config.nome_profissional else 'AgendaFlow' }}
             </div>
         </div>
     </div>
 
     <script>
-        const meses = [
+        const diasLivres = {{ dias_livres|tojson }};
+        const diasOcupados = {{ dias_ocupados|tojson }};
+        const dataMin = "{{ data_min }}";
+        const dataMax = "{{ data_max }}";
+        const dataSelecionada = "{{ data_selecionada }}";
+
+        const mesesPt = [
             "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
         ];
 
-        const dataMin = "{{ data_min or '' }}";
-        const dataMax = "{{ data_max or '' }}";
-        const dataSelecionadaInicial = "{{ data_selecionada or '' }}";
-
-        const diasLivres = {{ (dias_livres or [])|tojson }};
-        const diasOcupados = {{ (dias_ocupados or [])|tojson }};
-
+        const inputData = document.getElementById("dataSelecionadaInput");
         const gradeCalendario = document.getElementById("gradeCalendario");
         const tituloMes = document.getElementById("tituloMes");
-        const inputDataSelecionada = document.getElementById("dataSelecionadaInput");
-        const textoDataEscolhida = document.getElementById("dataEscolhidaTexto");
-        const botaoVerHorarios = document.getElementById("botaoVerHorarios");
+        const btnMesAnterior = document.getElementById("mesAnterior");
+        const btnProximoMes = document.getElementById("proximoMes");
 
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
+        const dataBase = dataSelecionada ? new Date(dataSelecionada + "T12:00:00") : new Date(dataMin + "T12:00:00");
+        let mesAtual = dataBase.getMonth();
+        let anoAtual = dataBase.getFullYear();
 
-        function parseDataLocal(dataStr) {
-            if (!dataStr) return null;
-            const [ano, mes, dia] = dataStr.split("-").map(Number);
-            return new Date(ano, mes - 1, dia);
+        function formatarDataLocal(ano, mes, dia) {
+            const mm = String(mes + 1).padStart(2, "0");
+            const dd = String(dia).padStart(2, "0");
+            return `${ano}-${mm}-${dd}`;
         }
 
-        function formatarDataISO(date) {
-            const ano = date.getFullYear();
-            const mes = String(date.getMonth() + 1).padStart(2, "0");
-            const dia = String(date.getDate()).padStart(2, "0");
-            return `${ano}-${mes}-${dia}`;
+        function atualizarResumoServico() {
+            const selectServico = document.getElementById("servico");
+            const resumoServico = document.getElementById("resumoServico");
+            if (!selectServico || !resumoServico) return;
+
+            const texto = selectServico.value || "Selecione um serviço";
+            resumoServico.textContent = texto;
         }
 
-        function formatarDataBR(dataStr) {
-            if (!dataStr) return "Nenhuma data selecionada";
-            const [ano, mes, dia] = dataStr.split("-");
-            return `${dia}/${mes}/${ano}`;
+        function atualizarResumoHora(hora) {
+            const resumoHora = document.getElementById("resumoHora");
+            if (resumoHora) {
+                resumoHora.textContent = hora || "Selecione um horário";
+            }
         }
 
-        const minDateObj = parseDataLocal(dataMin);
-        const maxDateObj = parseDataLocal(dataMax);
+        function atualizarResumoData(data) {
+            const resumoData = document.getElementById("resumoData");
+            if (resumoData) {
+                resumoData.textContent = data || "Selecione uma data";
+            }
 
-        let mesAtual;
-        let anoAtual;
-
-        if (dataSelecionadaInicial) {
-            const dataInicial = parseDataLocal(dataSelecionadaInicial);
-            mesAtual = dataInicial.getMonth();
-            anoAtual = dataInicial.getFullYear();
-        } else if (minDateObj) {
-            mesAtual = minDateObj.getMonth();
-            anoAtual = minDateObj.getFullYear();
-        } else {
-            mesAtual = hoje.getMonth();
-            anoAtual = hoje.getFullYear();
-        }
-
-        function dataDentroDoIntervalo(dataObj) {
-            if (minDateObj && dataObj < minDateObj) return false;
-            if (maxDateObj && dataObj > maxDateObj) return false;
-            return true;
-        }
-
-        function atualizarTextoData() {
-            const valor = inputDataSelecionada.value;
-            textoDataEscolhida.innerHTML = `<strong>Data selecionada:</strong> ${formatarDataBR(valor)}`;
-            botaoVerHorarios.disabled = !valor;
-        }
-
-        function criarDiaVazio() {
-            const div = document.createElement("div");
-            div.className = "dia-calendario dia-vazio";
-            return div;
+            const textoDataEscolhida = document.getElementById("textoDataEscolhida");
+            if (textoDataEscolhida) {
+                textoDataEscolhida.textContent = data || "";
+            }
         }
 
         function renderizarCalendario() {
             gradeCalendario.innerHTML = "";
-            tituloMes.textContent = `${meses[mesAtual]} ${anoAtual}`;
+
+            tituloMes.textContent = `${mesesPt[mesAtual]} ${anoAtual}`;
 
             const primeiroDia = new Date(anoAtual, mesAtual, 1);
-            const ultimoDia = new Date(anoAtual, mesAtual + 1, 0);
-            const totalDias = ultimoDia.getDate();
-
             let primeiroIndice = primeiroDia.getDay();
             primeiroIndice = primeiroIndice === 0 ? 6 : primeiroIndice - 1;
 
+            const ultimoDia = new Date(anoAtual, mesAtual + 1, 0).getDate();
+
             for (let i = 0; i < primeiroIndice; i++) {
-                gradeCalendario.appendChild(criarDiaVazio());
+                const vazio = document.createElement("button");
+                vazio.className = "dia-calendario dia-vazio";
+                vazio.type = "button";
+                gradeCalendario.appendChild(vazio);
             }
 
-            for (let dia = 1; dia <= totalDias; dia++) {
-                const dataObj = new Date(anoAtual, mesAtual, dia);
-                const dataISO = formatarDataISO(dataObj);
+            for (let dia = 1; dia <= ultimoDia; dia++) {
+                const dataCompleta = formatarDataLocal(anoAtual, mesAtual, dia);
+                const botao = document.createElement("button");
+                botao.type = "button";
+                botao.className = "dia-calendario";
+                botao.textContent = dia;
 
-                const botaoDia = document.createElement("button");
-                botaoDia.type = "button";
-                botaoDia.className = "dia-calendario";
-                botaoDia.textContent = dia;
+                const hoje = new Date();
+                const hojeFormatado = formatarDataLocal(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
 
-                const foraIntervalo = !dataDentroDoIntervalo(dataObj);
-
-                if (formatarDataISO(dataObj) === formatarDataISO(hoje)) {
-                    botaoDia.classList.add("dia-hoje");
+                if (dataCompleta === hojeFormatado) {
+                    botao.classList.add("dia-hoje");
                 }
 
-                if (inputDataSelecionada.value === dataISO) {
-                    botaoDia.classList.add("dia-selecionado");
-                }
-
-                if (foraIntervalo) {
-                    botaoDia.classList.add("dia-bloqueado");
-                    botaoDia.disabled = true;
-                } else if (diasOcupados.includes(dataISO)) {
-                    botaoDia.classList.add("dia-ocupado");
-                    botaoDia.disabled = true;
-                } else if (diasLivres.includes(dataISO)) {
-                    botaoDia.classList.add("dia-livre");
-                    botaoDia.addEventListener("click", () => {
-                        inputDataSelecionada.value = dataISO;
-                        atualizarTextoData();
-                        renderizarCalendario();
-                    });
+                if (dataCompleta < dataMin || dataCompleta > dataMax) {
+                    botao.classList.add("dia-bloqueado");
+                    botao.disabled = true;
+                } else if (diasLivres.includes(dataCompleta)) {
+                    botao.classList.add("dia-livre");
+                } else if (diasOcupados.includes(dataCompleta)) {
+                    botao.classList.add("dia-ocupado");
+                    botao.disabled = true;
                 } else {
-                    botaoDia.classList.add("dia-bloqueado");
-                    botaoDia.disabled = true;
+                    botao.classList.add("dia-bloqueado");
+                    botao.disabled = true;
                 }
 
-                gradeCalendario.appendChild(botaoDia);
+                if (dataSelecionada && dataCompleta === dataSelecionada) {
+                    botao.classList.add("dia-selecionado");
+                }
+
+                if (!botao.disabled) {
+                    botao.addEventListener("click", function () {
+                        inputData.value = dataCompleta;
+                        atualizarResumoData(dataCompleta);
+                        window.location.href = window.location.pathname + "?data=" + dataCompleta;
+                    });
+                }
+
+                gradeCalendario.appendChild(botao);
             }
         }
 
-        document.getElementById("mesAnterior").addEventListener("click", () => {
+        btnMesAnterior.addEventListener("click", function () {
             mesAtual--;
             if (mesAtual < 0) {
                 mesAtual = 11;
@@ -775,7 +881,7 @@
             renderizarCalendario();
         });
 
-        document.getElementById("proximoMes").addEventListener("click", () => {
+        btnProximoMes.addEventListener("click", function () {
             mesAtual++;
             if (mesAtual > 11) {
                 mesAtual = 0;
@@ -784,9 +890,33 @@
             renderizarCalendario();
         });
 
-        atualizarTextoData();
+        document.querySelectorAll(".horario-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.querySelectorAll(".horario-btn").forEach(item => item.classList.remove("ativo"));
+                this.classList.add("ativo");
+
+                const hora = this.getAttribute("data-hora");
+                document.getElementById("horaSelecionada").value = hora;
+                atualizarResumoHora(hora);
+            });
+        });
+
+        const selectServico = document.getElementById("servico");
+        if (selectServico) {
+            selectServico.addEventListener("change", atualizarResumoServico);
+        }
+
+        if (dataSelecionada) {
+            const etapaHorarios = document.getElementById("etapa-horarios");
+            if (etapaHorarios) {
+                setTimeout(() => {
+                    etapaHorarios.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 150);
+            }
+        }
+
+        atualizarResumoServico();
         renderizarCalendario();
     </script>
-
 </body>
 </html>

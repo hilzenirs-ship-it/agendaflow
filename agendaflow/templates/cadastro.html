@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar conta - AgendaFlow</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f8edf2 0%, #f3eefb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: #4f4362;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 430px;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 28px;
+            padding: 34px 28px;
+            box-shadow: 0 18px 50px rgba(123, 90, 224, 0.12);
+            border: 1px solid rgba(210, 196, 235, 0.45);
+        }
+
+        .topo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 78px;
+            height: 78px;
+            margin: 0 auto 14px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            box-shadow: 0 10px 24px rgba(123, 90, 224, 0.22);
+        }
+
+        h1 {
+            font-size: 34px;
+            color: #57486c;
+            margin-bottom: 6px;
+        }
+
+        .sub {
+            color: #8a7f9c;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .erro {
+            background: #fff0f3;
+            color: #b24065;
+            border: 1px solid #f4bfd0;
+            padding: 12px 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .sucesso {
+            background: #eefcf3;
+            color: #227a4d;
+            border: 1px solid #bfe8cd;
+            padding: 12px 14px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        form {
+            margin-top: 8px;
+        }
+
+        .campo {
+            margin-bottom: 14px;
+        }
+
+        .campo label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 7px;
+            color: #6c5d81;
+        }
+
+        .campo input {
+            width: 100%;
+            padding: 14px 15px;
+            border-radius: 14px;
+            border: 1px solid #ddd5ec;
+            background: #fff;
+            font-size: 15px;
+            color: #4f4362;
+            transition: 0.2s;
+        }
+
+        .campo input:focus {
+            outline: none;
+            border-color: #b487ea;
+            box-shadow: 0 0 0 4px rgba(180, 135, 234, 0.12);
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 15px;
+            margin-top: 6px;
+            font-size: 17px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            box-shadow: 0 10px 24px rgba(123, 90, 224, 0.18);
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.98;
+        }
+
+        .rodape {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #877a98;
+        }
+
+        .rodape a {
+            color: #7b5ae0;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .rodape a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 520px) {
+            .card {
+                padding: 28px 20px;
+                border-radius: 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .logo {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="topo">
+            <div class="logo">A</div>
+            <h1>Criar conta</h1>
+            <div class="sub">Cadastre-se para acessar sua agenda e começar a organizar seus atendimentos.</div>
+        </div>
+
+        {% if erro %}
+            <div class="erro">{{ erro }}</div>
+        {% endif %}
+
+        {% if sucesso %}
+            <div class="sucesso">{{ sucesso }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="campo">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
+            </div>
+
+            <div class="campo">
+                <label for="usuario">Usuário</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Crie seu usuário de login" required>
+            </div>
+
+            <div class="campo">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" placeholder="Crie uma senha" required>
+            </div>
+
+            <div class="campo">
+                <label for="confirmar_senha">Confirmar senha</label>
+                <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Repita sua senha" required>
+            </div>
+
+            <button type="submit" class="btn">Criar conta</button>
+        </form>
+
+        <div class="rodape">
+            Já tem conta?
+            <a href="{{ url_for('login') }}">Entrar</a>
+        </div>
+    </div>
+
+</body>
+</html>
