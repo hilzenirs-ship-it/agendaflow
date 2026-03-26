@@ -7,7 +7,6 @@
 <title>AgendaFlow - Entrar</title>
 
 <style>
-
 *{
 box-sizing:border-box;
 font-family:Arial, Helvetica, sans-serif;
@@ -15,11 +14,12 @@ font-family:Arial, Helvetica, sans-serif;
 
 body{
 margin:0;
-height:100vh;
+min-height:100vh;
 display:flex;
 align-items:center;
 justify-content:center;
 background:linear-gradient(135deg,#F7E9EE,#EFE6FA);
+padding:20px;
 }
 
 .card{
@@ -49,11 +49,27 @@ font-weight:bold;
 h1{
 margin-top:10px;
 margin-bottom:5px;
+color:#3d3148;
 }
 
 .sub{
 color:#777;
-margin-bottom:25px;
+margin-bottom:18px;
+}
+
+.beneficio{
+margin:0 0 22px;
+padding:12px 14px;
+border-radius:14px;
+background:linear-gradient(135deg,rgba(216,180,226,0.18),rgba(242,198,214,0.22));
+border:1px solid rgba(176,133,232,0.16);
+color:#6b5877;
+font-size:14px;
+line-height:1.45;
+}
+
+.beneficio strong{
+color:#8d63be;
 }
 
 input{
@@ -63,11 +79,13 @@ margin-bottom:15px;
 border-radius:10px;
 border:1px solid #ddd;
 font-size:15px;
+transition:0.2s;
 }
 
 input:focus{
 outline:none;
 border-color:#CBA3E6;
+box-shadow:0 0 0 3px rgba(203,163,230,0.12);
 }
 
 button{
@@ -78,11 +96,14 @@ border-radius:12px;
 background:linear-gradient(135deg,#B085E8,#9B6FCB);
 color:white;
 font-size:16px;
+font-weight:bold;
 cursor:pointer;
+transition:0.2s;
 }
 
 button:hover{
 opacity:0.95;
+transform:translateY(-1px);
 }
 
 .erro{
@@ -91,11 +112,13 @@ padding:10px;
 border-radius:8px;
 margin-bottom:10px;
 color:#a00000;
+font-size:14px;
 }
 
 .link{
 margin-top:15px;
 font-size:14px;
+color:#666;
 }
 
 .link a{
@@ -104,6 +127,9 @@ text-decoration:none;
 font-weight:bold;
 }
 
+.link a:hover{
+text-decoration:underline;
+}
 </style>
 </head>
 
@@ -116,6 +142,10 @@ font-weight:bold;
 <h1>Entrar</h1>
 
 <div class="sub">Acesse sua conta</div>
+
+<div class="beneficio">
+Teste grátis por <strong>7 dias</strong> para conhecer o AgendaFlow.
+</div>
 
 {% if erro %}
 <div class="erro">{{ erro }}</div>

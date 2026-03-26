@@ -5,8 +5,13 @@ import calendar
 import sqlite3
 from datetime import datetime, timedelta
 import urllib.parse
+import urllib.request
+import urllib.error
+import json
+import hmac
+import hashlib
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from jinja2 import TemplateNotFound
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -21,6 +26,15 @@ app.config["SESSION_TYPE"] = "filesystem"
 
 DIAS_MAX_AGENDAMENTO = 30
 INTERVALO_MINUTOS = 60
+
+TESTE_GRATIS_DIAS = int(os.environ.get("TESTE_GRATIS_DIAS", "7"))
+PLANO_VALOR = float(os.environ.get("PLANO_VALOR", "14.99"))
+PLANO_MOEDA = os.environ.get("PLANO_MOEDA", "BRL").strip() or "BRL"
+MP_ACCESS_TOKEN = (os.environ.get("MP_ACCESS_TOKEN") or "").strip()
+MP_WEBHOOK_SECRET = (os.environ.get("MP_WEBHOOK_SECRET") or "").strip()
+APP_BASE_URL = (os.environ.get("APP_BASE_URL") or "").strip().rstrip("/")
+MP_API_BASE = "https://api.mercadopago.com"
+MP_TIMEOUT = int(os.environ.get("MP_TIMEOUT", "20"))
 
 MESES_PT = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -96,13 +110,16 @@ def criar_usuario_padrao_se_nao_existir(cur):
 
     if not usuario_admin:
         cur.execute("""
-            INSERT INTO usuarios (nome, usuario, senha, slug)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO usuarios (nome, usuario, senha, slug, email, plano, data_expiracao)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             "Administrador",
             "admin",
             generate_password_hash("1234"),
-            "admin"
+            "admin",
+            "",
+            "teste",
+            (datetime.now() + timedelta(days=TESTE_GRATIS_DIAS)).strftime("%Y-%m-%d")
         ))
 
     usuario_admin = cur.execute("""
@@ -126,6 +143,41 @@ def garantir_configuracao_usuario(cur, usuario_id, nome_profissional="AgendaFlow
             INSERT INTO configuracoes_usuario (usuario_id, nome_profissional, whatsapp)
             VALUES (?, ?, ?)
         """, (usuario_id, nome_profissional, ""))
+
+
+def criar_servicos_exemplo(cur, usuario_id):
+    exemplos = [
+        ("Tufinho", 35.0, "40min"),
+        ("Volume brasileiro", 80.0, "2h"),
+        ("Volume egípcio", 80.0, "2h"),
+        ("Fox eyes", 100.0, "2h"),
+        ("Escova", 45.0, "50min"),
+        ("Corte feminino", 60.0, "1h"),
+        ("Luzes", 180.0, "3h"),
+        ("Sobrancelha", 25.0, "30min"),
+    ]
+
+    for nome, preco, duracao in exemplos:
+        cur.execute("""
+            INSERT INTO servicos (usuario_id, nome, preco, duracao)
+            VALUES (?, ?, ?, ?)
+        """, (usuario_id, nome, preco, duracao))
+
+
+def criar_horarios_exemplo(cur, usuario_id):
+    exemplos = [
+        ("Segunda", "07:00", "18:00"),
+        ("Terça", "07:00", "18:00"),
+        ("Quarta", "07:00", "18:00"),
+        ("Quinta", "07:00", "18:00"),
+        ("Sexta", "07:00", "18:00"),
+    ]
+
+    for dia_semana, hora_inicio, hora_fim in exemplos:
+        cur.execute("""
+            INSERT INTO horarios (usuario_id, dia_semana, hora_inicio, hora_fim)
+            VALUES (?, ?, ?, ?)
+        """, (usuario_id, dia_semana, hora_inicio, hora_fim))
 
 
 def migrar_slugs_antigos(cur):
@@ -168,15 +220,62 @@ def criar_tabelas():
             nome TEXT NOT NULL,
             usuario TEXT NOT NULL UNIQUE,
             senha TEXT NOT NULL,
-            slug TEXT UNIQUE
+            slug TEXT UNIQUE,
+            email TEXT DEFAULT '',
+            plano TEXT DEFAULT 'teste',
+            data_expiracao TEXT,
+            mp_preapproval_id TEXT DEFAULT '',
+            mp_status TEXT DEFAULT '',
+            mp_payer_email TEXT DEFAULT '',
+            mp_next_billing_date TEXT DEFAULT ''
         )
     """)
 
     if not coluna_existe(cur, "usuarios", "slug"):
         cur.execute("ALTER TABLE usuarios ADD COLUMN slug TEXT")
 
+    if not coluna_existe(cur, "usuarios", "email"):
+        cur.execute("ALTER TABLE usuarios ADD COLUMN email TEXT DEFAULT ''")
+
+    if not coluna_existe(cur, "usuarios", "plano"):
+        cur.execute("ALTER TABLE usuarios ADD COLUMN plano TEXT DEFAULT 'teste'")
+
+    if not coluna_existe(cur, "usuarios", "data_expiracao"):
+        cur.execute("ALTER TABLE usuarios ADD COLUMN data_expiracao TEXT")
+
+    if not coluna_existe(cur, "usuarios", "mp_preapproval_id"):
+        cur.execute("ALTER TABLE usuarios ADD COLUMN mp_preapproval_id TEXT DEFAULT ''")
+
+    if not coluna_existe(cur, "usuarios", "mp_status"):
+        cur.execute("ALTER TABLE usuarios ADD COLUMN mp_status TEXT DEFAULT ''")
+
+    if not coluna_existe(cur, "usuarios", "mp_payer_email"):
+        cur.execute("ALTER TABLE usuarios ADD COLUMN mp_payer_email TEXT DEFAULT ''")
+
+    if not coluna_existe(cur, "usuarios", "mp_next_billing_date"):
+        cur.execute("ALTER TABLE usuarios ADD COLUMN mp_next_billing_date TEXT DEFAULT ''")
+
     admin_id = criar_usuario_padrao_se_nao_existir(cur)
     migrar_slugs_antigos(cur)
+
+    cur.execute("""
+        UPDATE usuarios
+        SET plano = COALESCE(NULLIF(plano, ''), 'teste')
+    """)
+
+    cur.execute("""
+        UPDATE usuarios
+        SET data_expiracao = ?
+        WHERE usuario = 'admin'
+          AND (data_expiracao IS NULL OR TRIM(data_expiracao) = '')
+    """, ((datetime.now() + timedelta(days=TESTE_GRATIS_DIAS)).strftime("%Y-%m-%d"),))
+
+    cur.execute("""
+        UPDATE usuarios
+        SET data_expiracao = ?
+        WHERE plano = 'teste'
+          AND (data_expiracao IS NULL OR TRIM(data_expiracao) = '')
+    """, ((datetime.now() + timedelta(days=TESTE_GRATIS_DIAS)).strftime("%Y-%m-%d"),))
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS servicos (
@@ -327,6 +426,340 @@ criar_tabelas()
 # --------------------------------------------------
 # FUNÇÕES AUXILIARES
 # --------------------------------------------------
+# --------------------------------------------------
+# PLANO / ASSINATURA
+# --------------------------------------------------
+def data_str_hoje():
+    return datetime.now().strftime("%Y-%m-%d")
+
+
+def adicionar_dias(data_base, dias):
+    return (data_base + timedelta(days=dias)).strftime("%Y-%m-%d")
+
+
+def formatar_data_br(data_str):
+    if not data_str:
+        return ""
+    try:
+        return datetime.strptime(data_str[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
+    except ValueError:
+        return data_str
+
+
+def obter_usuario(cur, usuario_id):
+    return cur.execute("""
+        SELECT *
+        FROM usuarios
+        WHERE id = ?
+        LIMIT 1
+    """, (usuario_id,)).fetchone()
+
+
+def obter_status_plano_usuario(usuario_id):
+    con = conectar()
+    cur = con.cursor()
+
+    usuario = obter_usuario(cur, usuario_id)
+    con.close()
+
+    if not usuario:
+        return {
+            "plano_ativo": False,
+            "tipo_plano": "nenhum",
+            "data_expiracao": "",
+            "status_mp": "",
+            "tem_assinatura_ativa": False
+        }
+
+    plano = (usuario["plano"] or "").strip().lower()
+    data_expiracao = (usuario["data_expiracao"] or "").strip()
+    mp_status = (usuario["mp_status"] or "").strip().lower()
+
+    plano_ativo = False
+    tipo_plano = "nenhum"
+
+    if plano == "ativo" and mp_status == "authorized":
+        plano_ativo = True
+        tipo_plano = "pago"
+    elif plano == "teste" and data_expiracao:
+        try:
+            plano_ativo = datetime.now().date() <= datetime.strptime(data_expiracao, "%Y-%m-%d").date()
+            tipo_plano = "teste"
+        except ValueError:
+            plano_ativo = False
+
+    return {
+        "plano_ativo": plano_ativo,
+        "tipo_plano": tipo_plano,
+        "data_expiracao": formatar_data_br(data_expiracao),
+        "status_mp": mp_status,
+        "tem_assinatura_ativa": mp_status == "authorized"
+    }
+
+
+def usuario_tem_acesso(usuario_id):
+    status = obter_status_plano_usuario(usuario_id)
+    return status["plano_ativo"]
+
+
+def atualizar_plano_local(cur, usuario_id, plano, data_expiracao=None, mp_preapproval_id=None, mp_status=None,
+                          mp_payer_email=None, mp_next_billing_date=None, email=None):
+    partes = ["plano = ?"]
+    valores = [plano]
+
+    if data_expiracao is not None:
+        partes.append("data_expiracao = ?")
+        valores.append(data_expiracao)
+
+    if mp_preapproval_id is not None:
+        partes.append("mp_preapproval_id = ?")
+        valores.append(mp_preapproval_id)
+
+    if mp_status is not None:
+        partes.append("mp_status = ?")
+        valores.append(mp_status)
+
+    if mp_payer_email is not None:
+        partes.append("mp_payer_email = ?")
+        valores.append(mp_payer_email)
+
+    if mp_next_billing_date is not None:
+        partes.append("mp_next_billing_date = ?")
+        valores.append(mp_next_billing_date)
+
+    if email is not None:
+        partes.append("email = ?")
+        valores.append(email)
+
+    valores.append(usuario_id)
+
+    cur.execute(f"""
+        UPDATE usuarios
+        SET {", ".join(partes)}
+        WHERE id = ?
+    """, tuple(valores))
+
+
+def mp_headers(extra=None):
+    headers = {
+        "Authorization": f"Bearer {MP_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    if extra:
+        headers.update(extra)
+    return headers
+
+
+def mp_request(method, path, payload=None, query=None):
+    if not MP_ACCESS_TOKEN:
+        raise RuntimeError("MP_ACCESS_TOKEN não configurado.")
+
+    url = f"{MP_API_BASE}{path}"
+    if query:
+        url = f"{url}?{urllib.parse.urlencode(query)}"
+
+    body = None
+    if payload is not None:
+        body = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers=mp_headers(),
+        method=method.upper()
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=MP_TIMEOUT) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detalhe = exc.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(f"Mercado Pago HTTP {exc.code}: {detalhe}")
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Erro de conexão com Mercado Pago: {exc}")
+
+
+def criar_assinatura_mercadopago(usuario_id, payer_email):
+    if not APP_BASE_URL:
+        raise RuntimeError("APP_BASE_URL não configurada.")
+
+    payload = {
+        "reason": f"AgendaFlow - Plano mensal R$ {PLANO_VALOR:.2f}",
+        "external_reference": str(usuario_id),
+        "payer_email": payer_email,
+        "back_url": f"{APP_BASE_URL}/assinatura/retorno",
+        "notification_url": f"{APP_BASE_URL}/webhook/mercadopago",
+        "status": "pending",
+        "auto_recurring": {
+            "frequency": 1,
+            "frequency_type": "months",
+            "transaction_amount": PLANO_VALOR,
+            "currency_id": PLANO_MOEDA
+        }
+    }
+
+    return mp_request("POST", "/preapproval", payload=payload)
+
+
+def obter_assinatura_mercadopago(preapproval_id):
+    return mp_request("GET", f"/preapproval/{preapproval_id}")
+
+
+def validar_assinatura_webhook(request_obj):
+    if not MP_WEBHOOK_SECRET:
+        return True
+
+    assinatura = (request_obj.headers.get("x-signature") or "").strip()
+    request_id = (request_obj.headers.get("x-request-id") or "").strip()
+
+    if not assinatura or not request_id:
+        return False
+
+    partes = {}
+    for item in assinatura.split(","):
+        if "=" in item:
+            chave, valor = item.split("=", 1)
+            partes[chave.strip()] = valor.strip()
+
+    ts = partes.get("ts", "")
+    v1 = partes.get("v1", "")
+
+    data_id = ""
+    body_json = request_obj.get_json(silent=True) or {}
+    if isinstance(body_json, dict):
+        data_id = (
+            body_json.get("data", {}).get("id")
+            or body_json.get("id")
+            or request_obj.args.get("data.id")
+            or request_obj.args.get("id")
+            or ""
+        )
+
+    manifest = f"id:{data_id};request-id:{request_id};ts:{ts};"
+    assinatura_calculada = hmac.new(
+        MP_WEBHOOK_SECRET.encode("utf-8"),
+        msg=manifest.encode("utf-8"),
+        digestmod=hashlib.sha256
+    ).hexdigest()
+
+    return hmac.compare_digest(assinatura_calculada, v1)
+
+
+def sincronizar_assinatura_por_preapproval(preapproval_id):
+    if not preapproval_id:
+        return False, "ID da assinatura não informado."
+
+    dados = obter_assinatura_mercadopago(preapproval_id)
+    if not isinstance(dados, dict):
+        return False, "Resposta inválida do Mercado Pago."
+
+    external_reference = str(dados.get("external_reference") or "").strip()
+    if not external_reference.isdigit():
+        return False, "Assinatura sem external_reference numérico."
+
+    usuario_id = int(external_reference)
+    status = (dados.get("status") or "").strip().lower()
+    payer_email = (dados.get("payer_email") or "").strip()
+    next_billing_date = (dados.get("next_payment_date") or "").strip()
+    data_expiracao = ""
+
+    if next_billing_date:
+        data_expiracao = next_billing_date[:10]
+
+    if status == "authorized":
+        plano = "ativo"
+        if not data_expiracao:
+            data_expiracao = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+    elif status == "pending":
+        plano = "teste"
+        con = conectar()
+        cur = con.cursor()
+        user = obter_usuario(cur, usuario_id)
+        con.close()
+        data_expiracao = (user["data_expiracao"] or "") if user else ""
+    else:
+        plano = "vencido"
+        data_expiracao = datetime.now().strftime("%Y-%m-%d")
+
+    con = conectar()
+    cur = con.cursor()
+    atualizar_plano_local(
+        cur,
+        usuario_id,
+        plano=plano,
+        data_expiracao=data_expiracao,
+        mp_preapproval_id=preapproval_id,
+        mp_status=status,
+        mp_payer_email=payer_email,
+        mp_next_billing_date=next_billing_date,
+        email=payer_email or None
+    )
+    con.commit()
+    con.close()
+
+    return True, status
+
+
+def usuario_tem_config_mp():
+    return bool(MP_ACCESS_TOKEN and APP_BASE_URL)
+
+
+def pagina_assinatura_html(config, email_atual="", erro="", info=""):
+    nome_studio = config.get("nome_profissional", "AgendaFlow")
+    return f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assinar - AgendaFlow</title>
+<style>
+*{{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}}
+body{{margin:0;min-height:100vh;background:linear-gradient(135deg,#f8edf2 0%,#f3eefb 100%);display:flex;align-items:center;justify-content:center;padding:24px;color:#43374a;}}
+.card{{width:100%;max-width:460px;background:#fff;border-radius:28px;padding:28px;box-shadow:0 18px 50px rgba(123,90,224,0.12);border:1px solid rgba(210,196,235,0.45);}}
+.logo{{width:76px;height:76px;margin:0 auto 14px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e78fb3,#7b5ae0);color:#fff;font-size:32px;font-weight:bold;}}
+h1{{margin:0 0 8px;text-align:center;color:#57486c;}}
+.sub{{text-align:center;color:#8a7f9c;line-height:1.5;margin-bottom:16px;}}
+.plano{{background:linear-gradient(135deg,rgba(231,143,179,0.12),rgba(123,90,224,0.08));border:1px solid #eadff4;border-radius:18px;padding:16px;margin-bottom:16px;}}
+.plano strong{{color:#4f4362;}}
+.campo{{margin-bottom:14px;}}
+label{{display:block;font-size:14px;font-weight:bold;margin-bottom:7px;color:#6c5d81;}}
+input{{width:100%;padding:14px 15px;border-radius:14px;border:1px solid #ddd5ec;background:#fff;font-size:15px;color:#4f4362;}}
+input:focus{{outline:none;border-color:#b487ea;box-shadow:0 0 0 4px rgba(180,135,234,0.12);}}
+.btn{{width:100%;border:none;border-radius:16px;padding:15px;font-size:17px;font-weight:bold;color:white;cursor:pointer;background:linear-gradient(135deg,#e78fb3,#7b5ae0);box-shadow:0 10px 24px rgba(123,90,224,0.18);}}
+.msg{{padding:12px 14px;border-radius:14px;margin-bottom:14px;font-size:14px;line-height:1.5;}}
+.erro{{background:#fff0f3;color:#b24065;border:1px solid #f4bfd0;}}
+.info{{background:#faf6ff;color:#5f536d;border:1px solid #eadff4;}}
+.links{{margin-top:14px;text-align:center;font-size:14px;}}
+a{{color:#7b5ae0;text-decoration:none;font-weight:bold;}}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">A</div>
+<h1>Assinar AgendaFlow</h1>
+<div class="sub">{nome_studio}</div>
+<div class="plano">
+<strong>Plano mensal:</strong> R$ {PLANO_VALOR:.2f}/mês<br>
+<strong>Teste grátis:</strong> {TESTE_GRATIS_DIAS} dias<br>
+Pagamento recorrente pelo Mercado Pago.
+</div>
+{f'<div class="msg erro">{erro}</div>' if erro else ''}
+{f'<div class="msg info">{info}</div>' if info else ''}
+<form method="POST">
+<div class="campo">
+<label for="email">E-mail para a assinatura</label>
+<input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" value="{email_atual}" required>
+</div>
+<button type="submit" class="btn">Continuar para o pagamento</button>
+</form>
+<div class="links">
+<a href="/dashboard">Voltar ao painel</a>
+</div>
+</div>
+</body>
+</html>"""
+
+
 def render_primeiro_template(opcoes, **contexto):
     for nome in opcoes:
         try:
@@ -575,6 +1008,47 @@ def buscar_slug_usuario(usuario_id):
 # --------------------------------------------------
 # CADASTRO / LOGIN
 # --------------------------------------------------
+@app.before_request
+def proteger_rotas_com_plano():
+    endpoint = request.endpoint or ""
+
+    publicos = {
+        "login",
+        "cadastro",
+        "logout",
+        "book_sem_usuario",
+        "redirecionar_book_id",
+        "agendar_publico_slug",
+        "sucesso",
+        "mercadopago_webhook",
+        "assinatura_retorno"
+    }
+
+    liberados_sem_plano = {
+        "dashboard",
+        "configuracoes",
+        "assinar",
+        "assinatura_bloqueada",
+        "logout",
+        "verificar_novos"
+    }
+
+    if endpoint.startswith("static"):
+        return None
+
+    if endpoint in publicos:
+        return None
+
+    if not usuario_logado():
+        return None
+
+    if endpoint in liberados_sem_plano:
+        return None
+
+    if not usuario_tem_acesso(usuario_id_logado()):
+        return redirect(url_for("assinatura_bloqueada"))
+
+
 @app.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
     erro = ""
@@ -622,18 +1096,25 @@ def cadastro():
 
         slug = gerar_slug_unico(cur, nome or usuario)
 
+        data_expiracao = (datetime.now() + timedelta(days=TESTE_GRATIS_DIAS)).strftime("%Y-%m-%d")
+
         cur.execute("""
-            INSERT INTO usuarios (nome, usuario, senha, slug)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO usuarios (nome, usuario, senha, slug, email, plano, data_expiracao)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             nome,
             usuario,
             generate_password_hash(senha),
-            slug
+            slug,
+            "",
+            "teste",
+            data_expiracao
         ))
 
         novo_usuario_id = cur.lastrowid
         garantir_configuracao_usuario(cur, novo_usuario_id, nome)
+        criar_servicos_exemplo(cur, novo_usuario_id)
+        criar_horarios_exemplo(cur, novo_usuario_id)
 
         con.commit()
         con.close()
@@ -752,6 +1233,7 @@ def dashboard():
     con.close()
 
     config = obter_configuracoes(usuario_id)
+    status_plano = obter_status_plano_usuario(usuario_id)
 
     return render_primeiro_template(
         ["dashboard.html", "agenda.html"],
@@ -762,7 +1244,11 @@ def dashboard():
         faturamento=faturamento,
         config=config,
         usuario_id=usuario_id,
-        slug_usuario=slug_usuario
+        slug_usuario=slug_usuario,
+        plano_ativo=status_plano["plano_ativo"],
+        data_expiracao=status_plano["data_expiracao"],
+        tipo_plano=status_plano["tipo_plano"],
+        status_mp=status_plano["status_mp"]
     )
 
 
@@ -1841,9 +2327,169 @@ def configuracoes():
         return redirect(url_for("dashboard"))
 
     config = obter_configuracoes(usuario_id)
-    return render_template("configuracoes.html", config=config)
+    status_plano = obter_status_plano_usuario(usuario_id)
+    return render_template(
+        "configuracoes.html",
+        config=config,
+        plano_ativo=status_plano["plano_ativo"],
+        data_expiracao=status_plano["data_expiracao"],
+        tipo_plano=status_plano["tipo_plano"],
+        status_mp=status_plano["status_mp"]
+    )
+
+
+@app.route("/assinatura-bloqueada")
+def assinatura_bloqueada():
+    if not usuario_logado():
+        return redirect(url_for("login"))
+
+    usuario_id = usuario_id_logado()
+    config = obter_configuracoes(usuario_id)
+    status_plano = obter_status_plano_usuario(usuario_id)
+
+    return pagina_assinatura_html(
+        config=config,
+        email_atual="",
+        erro="Seu acesso está bloqueado porque o teste grátis terminou ou sua assinatura não está ativa.",
+        info=f"Plano mensal: R$ {PLANO_VALOR:.2f}. Status atual: {status_plano['status_mp'] or 'sem assinatura ativa'}."
+    )
+
+
+@app.route("/assinar", methods=["GET", "POST"])
+def assinar():
+    if not usuario_logado():
+        return redirect(url_for("login"))
+
+    usuario_id = usuario_id_logado()
+    config = obter_configuracoes(usuario_id)
+
+    if not usuario_tem_config_mp():
+        return pagina_assinatura_html(
+            config=config,
+            erro="Falta configurar MP_ACCESS_TOKEN e APP_BASE_URL no servidor antes de ativar a assinatura automática."
+        )
+
+    con = conectar()
+    cur = con.cursor()
+    usuario = obter_usuario(cur, usuario_id)
+    con.close()
+
+    status_plano = obter_status_plano_usuario(usuario_id)
+    email_atual = (usuario["email"] or usuario["mp_payer_email"] or "").strip()
+
+    if status_plano["tipo_plano"] == "pago" and status_plano["status_mp"] == "authorized":
+        return redirect(url_for("dashboard"))
+
+    if request.method == "GET":
+        return pagina_assinatura_html(
+            config=config,
+            email_atual=email_atual,
+            info=f"Seu plano mensal será cobrado automaticamente em R$ {PLANO_VALOR:.2f}/mês pelo Mercado Pago."
+        )
+
+    email = (request.form.get("email") or "").strip().lower()
+    if not email:
+        return pagina_assinatura_html(config=config, email_atual=email_atual, erro="Informe um e-mail válido para a assinatura.")
+
+    try:
+        resposta = criar_assinatura_mercadopago(usuario_id, email)
+    except Exception as exc:
+        return pagina_assinatura_html(config=config, email_atual=email, erro=f"Não foi possível iniciar a assinatura: {exc}")
+
+    init_point = (resposta.get("init_point") or "").strip()
+    preapproval_id = (resposta.get("id") or "").strip()
+    status = (resposta.get("status") or "pending").strip().lower()
+
+    con = conectar()
+    cur = con.cursor()
+    user = obter_usuario(cur, usuario_id)
+    data_exp = (user["data_expiracao"] or "") if user else ""
+    atualizar_plano_local(
+        cur,
+        usuario_id,
+        plano="teste" if data_exp else "vencido",
+        data_expiracao=data_exp,
+        mp_preapproval_id=preapproval_id,
+        mp_status=status,
+        mp_payer_email=email,
+        email=email
+    )
+    con.commit()
+    con.close()
+
+    if init_point:
+        return redirect(init_point)
+
+    return pagina_assinatura_html(
+        config=config,
+        email_atual=email,
+        erro="O Mercado Pago não retornou o link de pagamento da assinatura."
+    )
+
+
+@app.route("/assinatura/retorno")
+def assinatura_retorno():
+    if not usuario_logado():
+        return redirect(url_for("login"))
+
+    preapproval_id = (request.args.get("preapproval_id") or request.args.get("id") or "").strip()
+
+    if preapproval_id:
+        try:
+            sincronizar_assinatura_por_preapproval(preapproval_id)
+        except Exception:
+            pass
+    else:
+        usuario_id = usuario_id_logado()
+        con = conectar()
+        cur = con.cursor()
+        usuario = obter_usuario(cur, usuario_id)
+        con.close()
+        if usuario and usuario["mp_preapproval_id"]:
+            try:
+                sincronizar_assinatura_por_preapproval(usuario["mp_preapproval_id"])
+            except Exception:
+                pass
+
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/webhook/mercadopago", methods=["POST"])
+def mercadopago_webhook():
+    if not validar_assinatura_webhook(request):
+        return jsonify({"ok": False, "erro": "assinatura inválida"}), 401
+
+    body = request.get_json(silent=True) or {}
+
+    data_id = ""
+    if isinstance(body, dict):
+        data_id = (
+            body.get("data", {}).get("id")
+            or body.get("id")
+            or request.args.get("data.id")
+            or request.args.get("id")
+            or ""
+        )
+
+    tipo = (
+        request.args.get("type")
+        or request.args.get("topic")
+        or body.get("type")
+        or body.get("topic")
+        or body.get("action")
+        or ""
+    ).lower()
+
+    if "preapproval" not in tipo and "subscription" not in tipo and not data_id:
+        return jsonify({"ok": True, "ignorado": True}), 200
+
+    try:
+        sucesso, detalhe = sincronizar_assinatura_por_preapproval(data_id)
+        return jsonify({"ok": sucesso, "detalhe": detalhe}), 200
+    except Exception as exc:
+        return jsonify({"ok": False, "erro": str(exc)}), 500
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)

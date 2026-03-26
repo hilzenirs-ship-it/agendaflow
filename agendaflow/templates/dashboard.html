@@ -250,6 +250,67 @@
             font-weight: 700;
         }
 
+        .plano-box {
+            background: linear-gradient(135deg, rgba(231,143,179,0.10), rgba(123,90,224,0.08));
+            border: 1px solid rgba(201, 182, 228, 0.4);
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .plano-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .plano-titulo {
+            font-size: 18px;
+            font-weight: 800;
+            color: #4a3c59;
+            margin-bottom: 6px;
+        }
+
+        .plano-texto {
+            font-size: 14px;
+            color: #6d5f7e;
+            line-height: 1.6;
+        }
+
+        .plano-preco {
+            display: inline-block;
+            margin-top: 10px;
+            background: #ffffff;
+            border: 1px solid #eadcf6;
+            color: #7b5ae0;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .plano-status {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .plano-status.ativo {
+            background: #eefcf3;
+            color: #227a4d;
+            border: 1px solid #bfe8cd;
+        }
+
+        .plano-status.vencido {
+            background: #fff0f3;
+            color: #b24065;
+            border: 1px solid #f4bfd0;
+        }
+
         .acoes-inferiores {
             position: fixed;
             left: 50%;
@@ -324,6 +385,11 @@
                 flex: 1;
                 text-align: center;
             }
+
+            .plano-linha {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -339,6 +405,43 @@
     </div>
 
     <div class="conteudo">
+
+        <div class="bloco">
+            <div class="linha-topo">
+                <span class="badge">Plano AgendaFlow</span>
+                {% if plano_ativo %}
+                    <span class="plano-status ativo">Teste grátis ativo</span>
+                {% else %}
+                    <span class="plano-status vencido">Assinatura necessária</span>
+                {% endif %}
+            </div>
+
+            <div class="plano-box">
+                <div class="plano-linha">
+                    <div>
+                        <div class="plano-titulo">Seu acesso ao sistema</div>
+
+                        {% if plano_ativo %}
+                            <div class="plano-texto">
+                                Você está usando o <strong>teste grátis</strong> do AgendaFlow.
+                                Seu acesso está liberado até <strong>{{ data_expiracao }}</strong>.
+                            </div>
+                        {% else %}
+                            <div class="plano-texto">
+                                Seu período grátis terminou. Para continuar usando agenda, clientes, serviços,
+                                financeiro e link de agendamento, ative seu plano mensal.
+                            </div>
+                        {% endif %}
+
+                        <div class="plano-preco">Plano mensal: R$ 14,99</div>
+                    </div>
+
+                    {% if not plano_ativo %}
+                        <a href="/assinar" class="botao-link">Assinar agora</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
         <div class="bloco">
             <div class="atalhos-titulo">Acessos rápidos</div>

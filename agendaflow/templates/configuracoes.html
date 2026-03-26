@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configurações - AgendaFlow</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
     <style>
         .ajuda-campo {
             font-size: 12px;
@@ -28,8 +29,62 @@
         .caixa-info strong {
             color: #43374a;
         }
+
+        .plano-box {
+            background: linear-gradient(135deg, rgba(231,143,179,0.12), rgba(123,90,224,0.08));
+            border: 1px solid #eadff4;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+        }
+
+        .plano-titulo {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #4f4362;
+        }
+
+        .plano-texto {
+            font-size: 13px;
+            color: #6c5d81;
+            margin-bottom: 10px;
+        }
+
+        .plano-status {
+            font-size: 13px;
+            font-weight: bold;
+            padding: 6px 10px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+
+        .ativo {
+            background: #eefcf3;
+            color: #227a4d;
+            border: 1px solid #bfe8cd;
+        }
+
+        .vencido {
+            background: #fff0f3;
+            color: #b24065;
+            border: 1px solid #f4bfd0;
+        }
+
+        .btn-plano {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none;
+        }
     </style>
 </head>
+
 <body>
     <div class="app-shell">
         <div class="topbar">
@@ -41,7 +96,38 @@
 
         <div class="container">
             <div class="card">
+
                 <p class="subtexto central">Personalize seu aplicativo</p>
+
+                <div class="plano-box">
+
+                    <div class="plano-titulo">Seu plano</div>
+
+                    {% if plano_ativo %}
+                        <div class="plano-status ativo">Teste grátis ativo</div>
+
+                        <div class="plano-texto">
+                            Seu acesso está liberado até <strong>{{ data_expiracao }}</strong>
+                        </div>
+
+                        <!-- 🔥 BOTÃO AGORA TAMBÉM NO TESTE -->
+                        <a href="/assinar" class="btn-plano">
+                            Assinar por R$ 14,99/mês
+                        </a>
+
+                    {% else %}
+                        <div class="plano-status vencido">Plano necessário</div>
+
+                        <div class="plano-texto">
+                            Seu teste terminou. Ative o plano para continuar usando o sistema.
+                        </div>
+
+                        <a href="/assinar" class="btn-plano">
+                            Assinar por R$ 14,99/mês
+                        </a>
+                    {% endif %}
+
+                </div>
 
                 <div class="caixa-info">
                     <strong>Dica:</strong> o número do WhatsApp deve ser salvo no formato internacional,
@@ -51,6 +137,7 @@
                 </div>
 
                 <form method="POST">
+
                     <input
                         type="text"
                         name="nome_profissional"
@@ -71,10 +158,16 @@
                         Use o número com código do país + DDD + número.
                     </div>
 
-                    <button type="submit" class="botao full">Salvar configurações</button>
+                    <button type="submit" class="botao full">
+                        Salvar configurações
+                    </button>
+
                 </form>
 
-                <a class="botao secundario full" href="/dashboard">Voltar</a>
+                <a class="botao secundario full" href="/dashboard">
+                    Voltar
+                </a>
+
             </div>
         </div>
     </div>

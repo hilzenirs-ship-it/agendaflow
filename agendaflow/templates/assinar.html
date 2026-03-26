@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Assinar Plano - AgendaFlow</title>
+
+<style>
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+min-height: 100vh;
+background: linear-gradient(135deg,#f8edf2 0%,#f3eefb 100%);
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+color: #4f4362;
+}
+
+.card {
+width: 100%;
+max-width: 420px;
+background: white;
+border-radius: 26px;
+padding: 30px 24px;
+box-shadow: 0 20px 50px rgba(123,90,224,0.12);
+text-align: center;
+}
+
+.logo {
+width: 70px;
+height: 70px;
+margin: 0 auto 12px;
+border-radius: 20px;
+display: flex;
+align-items: center;
+justify-content: center;
+background: linear-gradient(135deg,#e78fb3,#7b5ae0);
+color: white;
+font-size: 28px;
+font-weight: bold;
+}
+
+h1 {
+font-size: 26px;
+margin-bottom: 6px;
+}
+
+.sub {
+font-size: 14px;
+color: #7a6d86;
+margin-bottom: 20px;
+}
+
+.plano-box {
+background: linear-gradient(135deg,rgba(231,143,179,0.12),rgba(123,90,224,0.08));
+border: 1px solid #eadff4;
+border-radius: 18px;
+padding: 18px;
+margin-bottom: 18px;
+}
+
+.plano-titulo {
+font-size: 16px;
+font-weight: bold;
+margin-bottom: 6px;
+}
+
+.plano-preco {
+font-size: 22px;
+font-weight: bold;
+color: #7b5ae0;
+margin-bottom: 10px;
+}
+
+.lista {
+text-align: left;
+font-size: 14px;
+color: #6c5d81;
+line-height: 1.6;
+}
+
+.lista li {
+margin-bottom: 6px;
+}
+
+input {
+width: 100%;
+padding: 13px;
+border-radius: 12px;
+border: 1px solid #ddd;
+margin-top: 10px;
+margin-bottom: 15px;
+font-size: 14px;
+}
+
+button {
+width: 100%;
+padding: 14px;
+border: none;
+border-radius: 14px;
+background: linear-gradient(135deg,#e78fb3,#7b5ae0);
+color: white;
+font-size: 15px;
+font-weight: bold;
+cursor: pointer;
+transition: 0.2s;
+}
+
+button:hover {
+opacity: 0.95;
+transform: translateY(-1px);
+}
+
+.voltar {
+display: block;
+margin-top: 14px;
+font-size: 13px;
+color: #7b5ae0;
+text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="logo">A</div>
+
+<h1>Ativar plano</h1>
+<div class="sub">Continue usando o AgendaFlow sem limitações</div>
+
+<div class="plano-box">
+<div class="plano-titulo">Plano mensal</div>
+<div class="plano-preco">R$ 14,99 / mês</div>
+
+<ul class="lista">
+<li>✔ Agenda online ilimitada</li>
+<li>✔ Link de agendamento para clientes</li>
+<li>✔ Integração com WhatsApp</li>
+<li>✔ Controle de clientes</li>
+<li>✔ Financeiro básico</li>
+</ul>
+</div>
+
+<form method="POST">
+<input
+type="email"
+name="email"
+placeholder="Seu e-mail para pagamento"
+required
+>
+
+<button type="submit">
+Assinar agora
+</button>
+</form>
+
+<a href="/dashboard" class="voltar">
+Voltar
+</a>
+
+</div>
+
+</body>
+</html>
