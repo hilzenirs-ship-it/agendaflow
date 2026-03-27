@@ -151,7 +151,7 @@ text-decoration: none;
 </ul>
 </div>
 
-<form method="POST">
+<form method="POST" action="{{ url_for('assinar') }}">
 <input
 type="email"
 name="email"
@@ -164,7 +164,7 @@ Assinar agora
 </button>
 </form>
 
-<a href="/dashboard" class="voltar">
+<a href="{{ url_for('dashboard') }}" class="voltar">
 Voltar
 </a>
 
