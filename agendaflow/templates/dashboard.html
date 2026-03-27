@@ -436,11 +436,110 @@
                         <div class="plano-preco">Plano mensal: R$ 14,99</div>
                     </div>
 
-                    <!-- 🔥 AQUI FOI A ÚNICA ALTERAÇÃO -->
                     <a href="/assinar" class="botao-link">Assinar agora</a>
-
                 </div>
             </div>
         </div>
 
-        <!-- RESTO DO SEU CÓDIGO CONTINUA IGUAL -->>
+        <div class="bloco">
+            <div class="atalhos-titulo">Resumo do sistema</div>
+            <div class="resumo-grid">
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Agendamentos</div>
+                    <div class="resumo-valor">{{ total_agendamentos }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Clientes</div>
+                    <div class="resumo-valor">{{ total_clientes }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Serviços</div>
+                    <div class="resumo-valor">{{ total_servicos }}</div>
+                </div>
+
+                <div class="resumo-card">
+                    <div class="resumo-titulo">Faturamento</div>
+                    <div class="resumo-valor">R$ {{ '%.2f'|format(faturamento) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bloco">
+            <div class="atalhos-titulo">Atalhos rápidos</div>
+            <div class="menu-grid">
+                <a href="/agenda" class="menu-card">
+                    <div class="menu-icone">📅</div>
+                    <div class="menu-texto">Agenda</div>
+                    <div class="subinfo">Veja e organize seus horários</div>
+                </a>
+
+                <a href="/servicos" class="menu-card">
+                    <div class="menu-icone">💅</div>
+                    <div class="menu-texto">Serviços</div>
+                    <div class="subinfo">Cadastre e edite seus serviços</div>
+                </a>
+
+                <a href="/clientes" class="menu-card">
+                    <div class="menu-icone">👩‍💼</div>
+                    <div class="menu-texto">Clientes</div>
+                    <div class="subinfo">Gerencie sua lista de clientes</div>
+                </a>
+
+                <a href="/horarios" class="menu-card">
+                    <div class="menu-icone">⏰</div>
+                    <div class="menu-texto">Horários</div>
+                    <div class="subinfo">Defina sua disponibilidade</div>
+                </a>
+
+                <a href="/financeiro" class="menu-card">
+                    <div class="menu-icone">💰</div>
+                    <div class="menu-texto">Financeiro</div>
+                    <div class="subinfo">Acompanhe ganhos e atendimentos</div>
+                </a>
+
+                <a href="/configuracoes" class="menu-card">
+                    <div class="menu-icone">⚙️</div>
+                    <div class="menu-texto">Configurações</div>
+                    <div class="subinfo">Edite nome e WhatsApp do studio</div>
+                </a>
+            </div>
+
+            {% if slug_usuario %}
+            <div class="link-box">
+                <div class="label">Seu link de agendamento</div>
+
+                <div class="link-novo">
+                    <div class="link-info">
+                        <div class="valor">{{ request.host_url }}studio/{{ slug_usuario }}</div>
+                    </div>
+
+                    <div class="acoes-link">
+                        <a href="/studio/{{ slug_usuario }}" target="_blank" class="btn-link btn-abrir">Abrir</a>
+                        <button class="btn-link btn-copiar" onclick="copiarLink('{{ request.host_url }}studio/{{ slug_usuario }}')">Copiar</button>
+                        <a class="btn-link btn-whats" target="_blank" href="https://wa.me/?text={{ ('Agende seu horário aqui: ' ~ request.host_url ~ 'studio/' ~ slug_usuario)|urlencode }}">WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="acoes-inferiores">
+        <a href="/dashboard" class="nav-btn ativo">Início</a>
+        <a href="/agenda" class="nav-btn">Agenda</a>
+        <a href="/clientes" class="nav-btn">Clientes</a>
+        <a href="/configuracoes" class="nav-btn">Config</a>
+    </div>
+
+    <script>
+        function copiarLink(link) {
+            navigator.clipboard.writeText(link).then(function () {
+                alert("Link copiado com sucesso!");
+            });
+        }
+    </script>
+
+</body>
+</html>
