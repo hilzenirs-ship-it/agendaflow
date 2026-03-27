@@ -180,6 +180,34 @@ def criar_horarios_exemplo(cur, usuario_id):
         """, (usuario_id, dia_semana, hora_inicio, hora_fim))
 
 
+def garantir_dados_iniciais_usuario(usuario_id, nome_profissional="AgendaFlow"):
+    con = conectar()
+    cur = con.cursor()
+
+    garantir_configuracao_usuario(cur, usuario_id, nome_profissional)
+
+    total_servicos = cur.execute("""
+        SELECT COUNT(*) AS total
+        FROM servicos
+        WHERE usuario_id = ?
+    """, (usuario_id,)).fetchone()["total"]
+
+    total_horarios = cur.execute("""
+        SELECT COUNT(*) AS total
+        FROM horarios
+        WHERE usuario_id = ?
+    """, (usuario_id,)).fetchone()["total"]
+
+    if total_servicos == 0:
+        criar_servicos_exemplo(cur, usuario_id)
+
+    if total_horarios == 0:
+        criar_horarios_exemplo(cur, usuario_id)
+
+    con.commit()
+    con.close()
+
+
 def migrar_slugs_antigos(cur):
     usuarios_sem_slug = cur.execute("""
         SELECT id, nome, usuario
@@ -745,7 +773,7 @@ Pagamento recorrente pelo Mercado Pago.
 </div>
 {f'<div class="msg erro">{erro}</div>' if erro else ''}
 {f'<div class="msg info">{info}</div>' if info else ''}
-<form method="POST">
+<form method="POST" action="/assinar">
 <div class="campo">
 <label for="email">E-mail para a assinatura</label>
 <input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" value="{email_atual}" required>
@@ -1159,6 +1187,8 @@ def login():
             session["nome"] = dados["nome"]
             session["usuario_id"] = dados["id"]
             session["slug"] = dados["slug"]
+
+            garantir_dados_iniciais_usuario(dados["id"], dados["nome"] or "AgendaFlow")
             return redirect(url_for("dashboard"))
         else:
             erro = "Usuário ou senha inválidos."
@@ -1182,6 +1212,7 @@ def dashboard():
         return redirect(url_for("login"))
 
     usuario_id = usuario_id_logado()
+    garantir_dados_iniciais_usuario(usuario_id, session.get("nome") or "AgendaFlow")
 
     con = conectar()
     cur = con.cursor()
@@ -1988,6 +2019,7 @@ def agendar_publico_slug(slug):
         return "<h1>Studio não encontrado.</h1>"
 
     usuario_id = usuario["id"]
+    garantir_dados_iniciais_usuario(usuario_id, usuario["nome"] or "AgendaFlow")
     config = obter_configuracoes(usuario_id)
 
     servicos_lista = cur.execute("""
@@ -2389,12 +2421,20 @@ def assinar():
 
     email = (request.form.get("email") or "").strip().lower()
     if not email:
-        return pagina_assinatura_html(config=config, email_atual=email_atual, erro="Informe um e-mail válido para a assinatura.")
+        return pagina_assinatura_html(
+            config=config,
+            email_atual=email_atual,
+            erro="Informe um e-mail válido para a assinatura."
+        )
 
     try:
         resposta = criar_assinatura_mercadopago(usuario_id, email)
     except Exception as exc:
-        return pagina_assinatura_html(config=config, email_atual=email, erro=f"Não foi possível iniciar a assinatura: {exc}")
+        return pagina_assinatura_html(
+            config=config,
+            email_atual=email,
+            erro=f"Não foi possível iniciar a assinatura: {exc}"
+        )
 
     init_point = (resposta.get("init_point") or "").strip()
     preapproval_id = (resposta.get("id") or "").strip()
@@ -2404,6 +2444,7 @@ def assinar():
     cur = con.cursor()
     user = obter_usuario(cur, usuario_id)
     data_exp = (user["data_expiracao"] or "") if user else ""
+
     atualizar_plano_local(
         cur,
         usuario_id,
@@ -2423,7 +2464,7 @@ def assinar():
     return pagina_assinatura_html(
         config=config,
         email_atual=email,
-        erro="O Mercado Pago não retornou o link de pagamento da assinatura."
+        erro=f"O Mercado Pago não retornou o link de pagamento. Resposta: {resposta}"
     )
 
 
