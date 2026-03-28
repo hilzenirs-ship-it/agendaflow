@@ -1,0 +1,4 @@
+#Sat Mar 28 10:03:14 BRT 2026
+base.0=C\:\\Users\\Latitude 5480\\Desktop\\workspace1\\agendaflow\\app\\build\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

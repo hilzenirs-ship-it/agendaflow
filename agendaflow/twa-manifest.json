@@ -1,0 +1,51 @@
+{
+  "packageId": "com.hilzenir.agendaflow",
+  "host": "agendaflow-1.onrender.com",
+  "name": "AgendaFlow",
+  "launcherName": "AgendaFlow",
+  "display": "standalone",
+  "themeColor": "#7B5AE0",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#E78FB3",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://agendaflow-1.onrender.com/static/icons/icon-512.png",
+  "maskableIconUrl": "https://agendaflow-1.onrender.com/static/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "C:\\Users\\Latitude 5480\\Desktop\\workspace1\\agendaflow\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://agendaflow-1.onrender.com/static/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://agendaflow-1.onrender.com/static/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1"
+}

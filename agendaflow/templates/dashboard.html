@@ -9,62 +9,119 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --rose: #e78fb3;
+            --rose-dark: #c85d8f;
+            --purple: #7b5ae0;
+            --purple-dark: #6246ea;
+            --bg: #f8edf2;
+            --bg-2: #f3eefb;
+            --card: rgba(255, 255, 255, 0.9);
+            --card-soft: #fbf8fe;
+            --text: #43374a;
+            --text-soft: #7c7188;
+            --line: rgba(201, 182, 228, 0.35);
+            --success-bg: #eefcf3;
+            --success-text: #227a4d;
+            --danger-bg: #fff0f3;
+            --danger-text: #b24065;
+            --shadow: 0 14px 36px rgba(90, 61, 119, 0.08);
+            --shadow-soft: 0 10px 24px rgba(90, 61, 119, 0.08);
+            --radius-xl: 28px;
+            --radius-lg: 24px;
+            --radius-md: 20px;
+            --radius-sm: 16px;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
-            background: linear-gradient(135deg, #f8edf2 0%, #f3eefb 100%);
-            color: #43374a;
+            background:
+                radial-gradient(circle at top left, #ffe8f1 0%, transparent 28%),
+                radial-gradient(circle at top right, #efe7ff 0%, transparent 25%),
+                linear-gradient(180deg, #fff9fc 0%, #f8f2ff 100%);
+            color: var(--text);
             min-height: 100vh;
-            padding-bottom: 110px;
+            padding-bottom: 120px;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
         }
 
         .topo {
             background: linear-gradient(135deg, #e78fb3, #7b5ae0);
             color: white;
-            padding: 26px 22px 34px;
-            border-bottom-left-radius: 28px;
-            border-bottom-right-radius: 28px;
-            box-shadow: 0 8px 24px rgba(123, 90, 224, 0.18);
+            padding: 22px 18px 28px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 12px 30px rgba(123, 90, 224, 0.20);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .marca {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: 800;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
             opacity: 0.95;
         }
 
         .topo h1 {
-            margin-top: 14px;
-            font-size: 28px;
+            margin-top: 12px;
+            font-size: 26px;
             font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.3px;
         }
 
         .topo p {
             margin-top: 8px;
             font-size: 14px;
-            opacity: 0.95;
-            max-width: 520px;
-            line-height: 1.5;
+            opacity: 0.96;
+            line-height: 1.55;
+        }
+
+        .nome-studio {
+            margin-top: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.24);
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 700;
+            backdrop-filter: blur(6px);
         }
 
         .conteudo {
             width: 100%;
-            max-width: 1100px;
-            margin: -10px auto 0;
-            padding: 22px 16px 0;
+            margin: 0 auto;
+            padding: 16px 14px 0;
         }
 
         .bloco {
-            background: rgba(255, 255, 255, 0.88);
-            border: 1px solid rgba(201, 182, 228, 0.3);
-            border-radius: 26px;
-            padding: 20px;
-            box-shadow: 0 14px 36px rgba(90, 61, 119, 0.08);
-            backdrop-filter: blur(6px);
-            margin-bottom: 18px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 18px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+            margin-bottom: 16px;
         }
 
         .linha-topo {
@@ -73,76 +130,100 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: #f9e3ec;
-            color: #c85d8f;
+            color: var(--rose-dark);
             border: 1px solid #f1cade;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border-radius: 999px;
-            font-weight: 700;
-            font-size: 14px;
+            font-weight: 800;
+            font-size: 13px;
         }
 
         .botao-link {
             text-decoration: none;
             background: linear-gradient(135deg, #e78fb3, #a06ae8);
             color: white;
-            padding: 12px 18px;
-            border-radius: 14px;
-            font-weight: 700;
+            padding: 13px 18px;
+            border-radius: 16px;
+            font-weight: 800;
             font-size: 14px;
             box-shadow: 0 8px 18px rgba(160, 106, 232, 0.18);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+
+        .botao-link:hover,
+        .menu-card:hover,
+        .nav-btn:hover,
+        .btn-link:hover {
+            transform: translateY(-2px);
+            opacity: 0.98;
+        }
+
+        .botao-link:active,
+        .menu-card:active,
+        .nav-btn:active,
+        .btn-link:active {
+            transform: scale(0.98);
         }
 
         .resumo-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
         }
 
         .resumo-card {
-            background: #fbf8fe;
+            background: linear-gradient(180deg, #fdfaff, #f8f2ff);
             border: 1px solid #eee2f8;
-            border-radius: 20px;
-            padding: 18px;
+            border-radius: 22px;
+            padding: 16px;
+            box-shadow: var(--shadow-soft);
         }
 
         .resumo-titulo {
-            font-size: 13px;
+            font-size: 12.5px;
             color: #847592;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: 700;
         }
 
         .resumo-valor {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 800;
             color: #534270;
+            line-height: 1.1;
+            word-break: break-word;
         }
 
         .atalhos-titulo {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
             color: #4a3c59;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
         }
 
         .menu-card {
             text-decoration: none;
             background: linear-gradient(135deg, #e78fb3, #7b5ae0);
             color: white;
-            border-radius: 22px;
-            min-height: 120px;
+            border-radius: 24px;
+            min-height: 122px;
             padding: 18px;
             display: flex;
             flex-direction: column;
@@ -150,78 +231,96 @@
             align-items: flex-start;
             box-shadow: 0 12px 26px rgba(123, 90, 224, 0.16);
             transition: transform 0.18s ease, opacity 0.18s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .menu-card:hover {
-            transform: translateY(-3px);
-            opacity: 0.97;
+        .menu-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.10), transparent 45%);
+            pointer-events: none;
+        }
+
+        .menu-icone,
+        .menu-texto,
+        .subinfo {
+            position: relative;
+            z-index: 1;
         }
 
         .menu-icone {
             font-size: 28px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .menu-texto {
             font-size: 18px;
             font-weight: 800;
+            line-height: 1.2;
         }
 
         .subinfo {
-            margin-top: 4px;
-            font-size: 13px;
-            opacity: 0.92;
+            margin-top: 5px;
+            font-size: 12.5px;
+            opacity: 0.94;
+            line-height: 1.45;
         }
 
         .link-box {
-            background: #fbf8fe;
+            background: linear-gradient(180deg, #fdfaff, #f8f2ff);
             border: 1px solid #eee2f8;
-            border-radius: 20px;
-            padding: 18px;
+            border-radius: 22px;
+            padding: 16px;
             margin-top: 18px;
+            box-shadow: var(--shadow-soft);
         }
 
         .link-box .label {
             color: #867595;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 12.5px;
+            font-weight: 800;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
 
         .link-novo {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 14px;
         }
 
         .link-info {
-            flex: 1;
-            min-width: 240px;
+            width: 100%;
         }
 
         .link-info .valor {
-            font-size: 20px;
+            font-size: 17px;
             font-weight: 800;
             color: #544372;
             word-break: break-word;
+            line-height: 1.4;
         }
 
         .acoes-link {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            flex-wrap: wrap;
+            width: 100%;
         }
 
         .btn-link {
             text-decoration: none;
             border: none;
-            padding: 10px 14px;
-            border-radius: 10px;
+            padding: 12px 10px;
+            border-radius: 14px;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
+            text-align: center;
+            transition: transform 0.18s ease, opacity 0.18s ease;
         }
 
         .btn-abrir {
@@ -239,30 +338,17 @@
             color: white;
         }
 
-        .nome-studio {
-            margin-top: 10px;
-            display: inline-block;
-            background: rgba(255,255,255,0.18);
-            border: 1px solid rgba(255,255,255,0.25);
-            padding: 10px 14px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
         .plano-box {
             background: linear-gradient(135deg, rgba(231,143,179,0.10), rgba(123,90,224,0.08));
             border: 1px solid rgba(201, 182, 228, 0.4);
-            border-radius: 20px;
-            padding: 18px;
+            border-radius: 22px;
+            padding: 16px;
         }
 
         .plano-linha {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
             gap: 16px;
-            flex-wrap: wrap;
         }
 
         .plano-titulo {
@@ -280,7 +366,7 @@
 
         .plano-preco {
             display: inline-block;
-            margin-top: 10px;
+            margin-top: 12px;
             background: #ffffff;
             border: 1px solid #eadcf6;
             color: #7b5ae0;
@@ -291,52 +377,56 @@
         }
 
         .plano-status {
-            display: inline-block;
-            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 8px 12px;
             border-radius: 999px;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 800;
         }
 
         .plano-status.ativo {
-            background: #eefcf3;
-            color: #227a4d;
+            background: var(--success-bg);
+            color: var(--success-text);
             border: 1px solid #bfe8cd;
         }
 
         .plano-status.vencido {
-            background: #fff0f3;
-            color: #b24065;
+            background: var(--danger-bg);
+            color: var(--danger-text);
             border: 1px solid #f4bfd0;
         }
 
         .acoes-inferiores {
             position: fixed;
             left: 50%;
-            bottom: 18px;
+            bottom: 12px;
             transform: translateX(-50%);
-            width: calc(100% - 24px);
-            max-width: 760px;
-            background: rgba(255, 255, 255, 0.92);
+            width: calc(100% - 20px);
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.94);
             border: 1px solid rgba(222, 208, 239, 0.9);
-            border-radius: 24px;
+            border-radius: 26px;
             padding: 10px;
             box-shadow: 0 14px 34px rgba(78, 58, 110, 0.14);
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            backdrop-filter: blur(8px);
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            z-index: 20;
         }
 
         .nav-btn {
             text-decoration: none;
             text-align: center;
-            padding: 14px 10px;
+            padding: 12px 8px;
             border-radius: 18px;
             font-weight: 800;
+            font-size: 13px;
             color: #756784;
             background: transparent;
+            line-height: 1.2;
         }
 
         .nav-btn.ativo {
@@ -345,192 +435,212 @@
             box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
         }
 
-        @media (max-width: 900px) {
+        @media (min-width: 700px) {
+            .app-shell {
+                max-width: 900px;
+            }
+
+            .conteudo {
+                padding: 18px 18px 0;
+            }
+
             .resumo-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .menu-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .plano-linha {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .link-novo {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .acoes-link {
+                display: flex;
+                flex-wrap: wrap;
+                width: auto;
+            }
+
+            .topo {
+                padding: 26px 22px 34px;
+            }
+
+            .topo h1 {
+                font-size: 28px;
             }
         }
 
-        @media (max-width: 560px) {
+        @media (max-width: 420px) {
             .topo h1 {
-                font-size: 24px;
-            }
-
-            .resumo-grid,
-            .menu-grid {
-                grid-template-columns: 1fr;
+                font-size: 23px;
             }
 
             .resumo-valor {
-                font-size: 24px;
+                font-size: 21px;
             }
 
-            .link-info .valor {
+            .menu-card {
+                min-height: 112px;
+                padding: 16px;
+            }
+
+            .menu-texto {
                 font-size: 16px;
             }
 
             .acoes-inferiores {
                 grid-template-columns: repeat(2, 1fr);
             }
-
-            .acoes-link {
-                width: 100%;
-            }
-
-            .btn-link {
-                flex: 1;
-                text-align: center;
-            }
-
-            .plano-linha {
-                flex-direction: column;
-                align-items: flex-start;
-            }
         }
     </style>
 </head>
 <body>
-
-    <div class="topo">
-        <div class="marca">AgendaFlow</div>
-        <h1>{{ config['nome_profissional'] if config else 'AgendaFlow' }}</h1>
-        <p>Gerencie sua agenda, clientes, serviços e faturamento em um visual mais moderno e elegante.</p>
-        <div class="nome-studio">
-            Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}
+    <div class="app-shell">
+        <div class="topo">
+            <div class="marca">AgendaFlow</div>
+            <h1>{{ config['nome_profissional'] if config else 'AgendaFlow' }}</h1>
+            <p>Gerencie sua agenda, clientes, serviços e faturamento em um visual mais moderno, leve e com cara de app.</p>
+            <div class="nome-studio">
+                ✨ Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}
+            </div>
         </div>
-    </div>
 
-    <div class="conteudo">
+        <div class="conteudo">
+            <div class="bloco">
+                <div class="linha-topo">
+                    <span class="badge">Plano AgendaFlow</span>
+                    {% if plano_ativo %}
+                        <span class="plano-status ativo">Teste grátis ativo</span>
+                    {% else %}
+                        <span class="plano-status vencido">Assinatura necessária</span>
+                    {% endif %}
+                </div>
 
-        <div class="bloco">
-            <div class="linha-topo">
-                <span class="badge">Plano AgendaFlow</span>
-                {% if plano_ativo %}
-                    <span class="plano-status ativo">Teste grátis ativo</span>
-                {% else %}
-                    <span class="plano-status vencido">Assinatura necessária</span>
+                <div class="plano-box">
+                    <div class="plano-linha">
+                        <div>
+                            <div class="plano-titulo">Seu acesso ao sistema</div>
+
+                            {% if plano_ativo %}
+                                <div class="plano-texto">
+                                    Você está usando o <strong>teste grátis</strong> do AgendaFlow.
+                                    Seu acesso está liberado até <strong>{{ data_expiracao }}</strong>.
+                                </div>
+                            {% else %}
+                                <div class="plano-texto">
+                                    Seu período grátis terminou. Para continuar usando agenda, clientes, serviços,
+                                    financeiro e link de agendamento, ative seu plano mensal.
+                                </div>
+                            {% endif %}
+
+                            <div class="plano-preco">Plano mensal: R$ 14,99</div>
+                        </div>
+
+                        <a href="/assinar" class="botao-link">Assinar agora</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bloco">
+                <div class="atalhos-titulo">Resumo do sistema</div>
+                <div class="resumo-grid">
+                    <div class="resumo-card">
+                        <div class="resumo-titulo">Agendamentos</div>
+                        <div class="resumo-valor">{{ total_agendamentos }}</div>
+                    </div>
+
+                    <div class="resumo-card">
+                        <div class="resumo-titulo">Clientes</div>
+                        <div class="resumo-valor">{{ total_clientes }}</div>
+                    </div>
+
+                    <div class="resumo-card">
+                        <div class="resumo-titulo">Serviços</div>
+                        <div class="resumo-valor">{{ total_servicos }}</div>
+                    </div>
+
+                    <div class="resumo-card">
+                        <div class="resumo-titulo">Faturamento</div>
+                        <div class="resumo-valor">R$ {{ '%.2f'|format(faturamento) }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bloco">
+                <div class="atalhos-titulo">Atalhos rápidos</div>
+                <div class="menu-grid">
+                    <a href="/agenda" class="menu-card">
+                        <div class="menu-icone">📅</div>
+                        <div class="menu-texto">Agenda</div>
+                        <div class="subinfo">Veja e organize seus horários</div>
+                    </a>
+
+                    <a href="/servicos" class="menu-card">
+                        <div class="menu-icone">💅</div>
+                        <div class="menu-texto">Serviços</div>
+                        <div class="subinfo">Cadastre e edite seus serviços</div>
+                    </a>
+
+                    <a href="/clientes" class="menu-card">
+                        <div class="menu-icone">👩‍💼</div>
+                        <div class="menu-texto">Clientes</div>
+                        <div class="subinfo">Gerencie sua lista de clientes</div>
+                    </a>
+
+                    <a href="/horarios" class="menu-card">
+                        <div class="menu-icone">⏰</div>
+                        <div class="menu-texto">Horários</div>
+                        <div class="subinfo">Defina sua disponibilidade</div>
+                    </a>
+
+                    <a href="/financeiro" class="menu-card">
+                        <div class="menu-icone">💰</div>
+                        <div class="menu-texto">Financeiro</div>
+                        <div class="subinfo">Acompanhe ganhos e atendimentos</div>
+                    </a>
+
+                    <a href="/configuracoes" class="menu-card">
+                        <div class="menu-icone">⚙️</div>
+                        <div class="menu-texto">Configurações</div>
+                        <div class="subinfo">Edite nome e WhatsApp do studio</div>
+                    </a>
+                </div>
+
+                {% if slug_usuario %}
+                <div class="link-box">
+                    <div class="label">Seu link de agendamento</div>
+
+                    <div class="link-novo">
+                        <div class="link-info">
+                            <div class="valor">{{ request.host_url }}studio/{{ slug_usuario }}</div>
+                        </div>
+
+                        <div class="acoes-link">
+                            <a href="/studio/{{ slug_usuario }}" target="_blank" class="btn-link btn-abrir">Abrir</a>
+                            <button class="btn-link btn-copiar" onclick="copiarLink('{{ request.host_url }}studio/{{ slug_usuario }}')">Copiar</button>
+                            <a class="btn-link btn-whats" target="_blank" href="https://wa.me/?text={{ ('Agende seu horário aqui: ' ~ request.host_url ~ 'studio/' ~ slug_usuario)|urlencode }}">WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
                 {% endif %}
             </div>
-
-            <div class="plano-box">
-                <div class="plano-linha">
-                    <div>
-                        <div class="plano-titulo">Seu acesso ao sistema</div>
-
-                        {% if plano_ativo %}
-                            <div class="plano-texto">
-                                Você está usando o <strong>teste grátis</strong> do AgendaFlow.
-                                Seu acesso está liberado até <strong>{{ data_expiracao }}</strong>.
-                            </div>
-                        {% else %}
-                            <div class="plano-texto">
-                                Seu período grátis terminou. Para continuar usando agenda, clientes, serviços,
-                                financeiro e link de agendamento, ative seu plano mensal.
-                            </div>
-                        {% endif %}
-
-                        <div class="plano-preco">Plano mensal: R$ 14,99</div>
-                    </div>
-
-                    <a href="/assinar" class="botao-link">Assinar agora</a>
-                </div>
-            </div>
         </div>
 
-        <div class="bloco">
-            <div class="atalhos-titulo">Resumo do sistema</div>
-            <div class="resumo-grid">
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Agendamentos</div>
-                    <div class="resumo-valor">{{ total_agendamentos }}</div>
-                </div>
-
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Clientes</div>
-                    <div class="resumo-valor">{{ total_clientes }}</div>
-                </div>
-
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Serviços</div>
-                    <div class="resumo-valor">{{ total_servicos }}</div>
-                </div>
-
-                <div class="resumo-card">
-                    <div class="resumo-titulo">Faturamento</div>
-                    <div class="resumo-valor">R$ {{ '%.2f'|format(faturamento) }}</div>
-                </div>
-            </div>
+        <div class="acoes-inferiores">
+            <a href="/dashboard" class="nav-btn ativo">Início</a>
+            <a href="/agenda" class="nav-btn">Agenda</a>
+            <a href="/clientes" class="nav-btn">Clientes</a>
+            <a href="/configuracoes" class="nav-btn">Config</a>
         </div>
-
-        <div class="bloco">
-            <div class="atalhos-titulo">Atalhos rápidos</div>
-            <div class="menu-grid">
-                <a href="/agenda" class="menu-card">
-                    <div class="menu-icone">📅</div>
-                    <div class="menu-texto">Agenda</div>
-                    <div class="subinfo">Veja e organize seus horários</div>
-                </a>
-
-                <a href="/servicos" class="menu-card">
-                    <div class="menu-icone">💅</div>
-                    <div class="menu-texto">Serviços</div>
-                    <div class="subinfo">Cadastre e edite seus serviços</div>
-                </a>
-
-                <a href="/clientes" class="menu-card">
-                    <div class="menu-icone">👩‍💼</div>
-                    <div class="menu-texto">Clientes</div>
-                    <div class="subinfo">Gerencie sua lista de clientes</div>
-                </a>
-
-                <a href="/horarios" class="menu-card">
-                    <div class="menu-icone">⏰</div>
-                    <div class="menu-texto">Horários</div>
-                    <div class="subinfo">Defina sua disponibilidade</div>
-                </a>
-
-                <a href="/financeiro" class="menu-card">
-                    <div class="menu-icone">💰</div>
-                    <div class="menu-texto">Financeiro</div>
-                    <div class="subinfo">Acompanhe ganhos e atendimentos</div>
-                </a>
-
-                <a href="/configuracoes" class="menu-card">
-                    <div class="menu-icone">⚙️</div>
-                    <div class="menu-texto">Configurações</div>
-                    <div class="subinfo">Edite nome e WhatsApp do studio</div>
-                </a>
-            </div>
-
-            {% if slug_usuario %}
-            <div class="link-box">
-                <div class="label">Seu link de agendamento</div>
-
-                <div class="link-novo">
-                    <div class="link-info">
-                        <div class="valor">{{ request.host_url }}studio/{{ slug_usuario }}</div>
-                    </div>
-
-                    <div class="acoes-link">
-                        <a href="/studio/{{ slug_usuario }}" target="_blank" class="btn-link btn-abrir">Abrir</a>
-                        <button class="btn-link btn-copiar" onclick="copiarLink('{{ request.host_url }}studio/{{ slug_usuario }}')">Copiar</button>
-                        <a class="btn-link btn-whats" target="_blank" href="https://wa.me/?text={{ ('Agende seu horário aqui: ' ~ request.host_url ~ 'studio/' ~ slug_usuario)|urlencode }}">WhatsApp</a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="acoes-inferiores">
-        <a href="/dashboard" class="nav-btn ativo">Início</a>
-        <a href="/agenda" class="nav-btn">Agenda</a>
-        <a href="/clientes" class="nav-btn">Clientes</a>
-        <a href="/configuracoes" class="nav-btn">Config</a>
     </div>
 
     <script>
@@ -540,6 +650,5 @@
             });
         }
     </script>
-
 </body>
 </html>
