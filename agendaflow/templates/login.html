@@ -115,6 +115,15 @@ color:#a00000;
 font-size:14px;
 }
 
+.sucesso{
+background:#eefcf3;
+padding:10px;
+border-radius:8px;
+margin-bottom:10px;
+color:#227a4d;
+font-size:14px;
+}
+
 .link{
 margin-top:15px;
 font-size:14px;
@@ -128,6 +137,24 @@ font-weight:bold;
 }
 
 .link a:hover{
+text-decoration:underline;
+}
+
+.links-rodape{
+margin-top:18px;
+display:flex;
+flex-direction:column;
+gap:10px;
+font-size:14px;
+}
+
+.links-rodape a{
+color:#9B6FCB;
+text-decoration:none;
+font-weight:bold;
+}
+
+.links-rodape a:hover{
 text-decoration:underline;
 }
 </style>
@@ -151,12 +178,16 @@ Teste grátis por <strong>7 dias</strong> para conhecer o AgendaFlow.
 <div class="erro">{{ erro }}</div>
 {% endif %}
 
+{% if sucesso %}
+<div class="sucesso">{{ sucesso }}</div>
+{% endif %}
+
 <form method="POST">
 
 <input
-type="text"
-name="usuario"
-placeholder="Seu usuário"
+type="email"
+name="email"
+placeholder="Seu e-mail"
 required
 >
 
@@ -173,9 +204,13 @@ Entrar
 
 </form>
 
+<div class="links-rodape">
+<a href="{{ url_for('esqueci_senha') }}">Esqueci minha senha</a>
+
 <div class="link">
 Não tem conta?
 <a href="{{ url_for('cadastro') }}">Criar conta</a>
+</div>
 </div>
 
 </div>

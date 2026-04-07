@@ -3,6 +3,8 @@ import re
 import unicodedata
 import calendar
 import sqlite3
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime, timedelta
 import urllib.parse
 import urllib.request
@@ -14,6 +16,7 @@ import hashlib
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from jinja2 import TemplateNotFound
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE_DIR, "banco.db")
@@ -35,6 +38,14 @@ MP_WEBHOOK_SECRET = (os.environ.get("MP_WEBHOOK_SECRET") or "").strip()
 APP_BASE_URL = (os.environ.get("APP_BASE_URL") or "").strip().rstrip("/")
 MP_API_BASE = "https://api.mercadopago.com"
 MP_TIMEOUT = int(os.environ.get("MP_TIMEOUT", "20"))
+
+EMAIL_HOST = (os.environ.get("EMAIL_HOST") or "").strip()
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = (os.environ.get("EMAIL_USE_TLS", "true").strip().lower() in ("1", "true", "sim", "yes"))
+EMAIL_HOST_USER = (os.environ.get("EMAIL_HOST_USER") or "").strip()
+EMAIL_HOST_PASSWORD = (os.environ.get("EMAIL_HOST_PASSWORD") or "").strip()
+EMAIL_FROM = (os.environ.get("EMAIL_FROM") or EMAIL_HOST_USER or "").strip()
+RECUPERACAO_SENHA_HORAS = int(os.environ.get("RECUPERACAO_SENHA_HORAS", "2"))
 
 MESES_PT = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -99,6 +110,105 @@ def gerar_slug_unico(cur, base_texto):
         contador += 1
 
     return slug_final
+
+
+def normalizar_email(email):
+    return (email or "").strip().lower()
+
+
+def email_valido(email):
+    email = normalizar_email(email)
+    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
+
+
+def obter_serializer_recuperacao():
+    return URLSafeTimedSerializer(app.secret_key)
+
+
+def gerar_token_recuperacao(email):
+    serializer = obter_serializer_recuperacao()
+    return serializer.dumps(normalizar_email(email), salt="recuperacao-senha")
+
+
+def validar_token_recuperacao(token, max_age_segundos=None):
+    serializer = obter_serializer_recuperacao()
+
+    if max_age_segundos is None:
+        max_age_segundos = RECUPERACAO_SENHA_HORAS * 3600
+
+    email = serializer.loads(
+        token,
+        salt="recuperacao-senha",
+        max_age=max_age_segundos
+    )
+    return normalizar_email(email)
+
+
+def smtp_configurado():
+    return bool(EMAIL_HOST and EMAIL_PORT and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD and EMAIL_FROM)
+
+
+def montar_url_base():
+    if APP_BASE_URL:
+        return APP_BASE_URL
+    return request.url_root.rstrip("/")
+
+
+def enviar_email(destinatario, assunto, corpo_texto, corpo_html=None):
+    if not smtp_configurado():
+        raise RuntimeError("SMTP não configurado.")
+
+    msg = EmailMessage()
+    msg["Subject"] = assunto
+    msg["From"] = EMAIL_FROM
+    msg["To"] = destinatario
+    msg.set_content(corpo_texto)
+
+    if corpo_html:
+        msg.add_alternative(corpo_html, subtype="html")
+
+    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=20) as servidor:
+        if EMAIL_USE_TLS:
+            servidor.starttls()
+        servidor.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+        servidor.send_message(msg)
+
+
+def enviar_email_recuperacao(nome, email, link_recuperacao):
+    nome_exibicao = nome or "AgendaFlow"
+
+    assunto = "Recuperação de senha - AgendaFlow"
+
+    corpo_texto = (
+        f"Olá, {nome_exibicao}!\n\n"
+        "Recebemos uma solicitação para redefinir sua senha no AgendaFlow.\n\n"
+        f"Acesse este link para criar uma nova senha:\n{link_recuperacao}\n\n"
+        f"Esse link expira em {RECUPERACAO_SENHA_HORAS} hora(s).\n\n"
+        "Se você não pediu essa alteração, ignore este e-mail.\n"
+    )
+
+    corpo_html = f"""
+    <html>
+    <body style="font-family:Arial,Helvetica,sans-serif;background:#f8edf2;padding:24px;color:#4f4362;">
+        <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:24px;padding:28px;border:1px solid rgba(210,196,235,0.45);box-shadow:0 18px 50px rgba(123,90,224,0.12);">
+            <div style="width:76px;height:76px;margin:0 auto 14px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e78fb3,#7b5ae0);color:#fff;font-size:32px;font-weight:bold;">A</div>
+            <h1 style="text-align:center;color:#57486c;margin:0 0 8px;">Recuperação de senha</h1>
+            <p style="text-align:center;color:#8a7f9c;margin:0 0 20px;">AgendaFlow</p>
+            <p>Olá, <strong>{nome_exibicao}</strong>!</p>
+            <p>Recebemos uma solicitação para redefinir sua senha.</p>
+            <p style="margin:24px 0;text-align:center;">
+                <a href="{link_recuperacao}" style="display:inline-block;padding:14px 22px;border-radius:16px;background:linear-gradient(135deg,#e78fb3,#7b5ae0);color:#ffffff;text-decoration:none;font-weight:bold;">Redefinir senha</a>
+            </p>
+            <p>Ou copie e cole este link no navegador:</p>
+            <p style="word-break:break-all;color:#7b5ae0;">{link_recuperacao}</p>
+            <p>Esse link expira em <strong>{RECUPERACAO_SENHA_HORAS} hora(s)</strong>.</p>
+            <p>Se você não pediu essa alteração, ignore este e-mail.</p>
+        </div>
+    </body>
+    </html>
+    """
+
+    enviar_email(email, assunto, corpo_texto, corpo_html)
 
 
 def criar_usuario_padrao_se_nao_existir(cur):
@@ -282,6 +392,12 @@ def criar_tabelas():
 
     if not coluna_existe(cur, "usuarios", "mp_next_billing_date"):
         cur.execute("ALTER TABLE usuarios ADD COLUMN mp_next_billing_date TEXT DEFAULT ''")
+
+    cur.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_email_unico
+        ON usuarios(email)
+        WHERE email IS NOT NULL AND TRIM(email) <> ''
+    """)
 
     admin_id = criar_usuario_padrao_se_nao_existir(cur)
     migrar_slugs_antigos(cur)
@@ -1044,6 +1160,8 @@ def proteger_rotas_com_plano():
         "login",
         "cadastro",
         "logout",
+        "esqueci_senha",
+        "redefinir_senha",
         "book_sem_usuario",
         "redirecionar_book_id",
         "agendar_publico_slug",
@@ -1084,45 +1202,55 @@ def cadastro():
 
     if request.method == "POST":
         nome = (request.form.get("nome") or "").strip()
-        usuario = (request.form.get("usuario") or "").strip()
+        email = normalizar_email(request.form.get("email"))
         senha = (request.form.get("senha") or "").strip()
         confirmar_senha = (request.form.get("confirmar_senha") or "").strip()
 
-        if not nome or not usuario or not senha or not confirmar_senha:
+        if not nome or not email or not senha or not confirmar_senha:
             erro = "Preencha todos os campos."
-            return render_primeiro_template(
-                ["cadastro.html", "login.html"],
-                erro=erro,
-                sucesso=sucesso
-            )
+            return render_template("cadastro.html", erro=erro, sucesso=sucesso)
+
+        if not email_valido(email):
+            erro = "Informe um e-mail válido."
+            return render_template("cadastro.html", erro=erro, sucesso=sucesso)
 
         if senha != confirmar_senha:
             erro = "As senhas não coincidem."
-            return render_primeiro_template(
-                ["cadastro.html", "login.html"],
-                erro=erro,
-                sucesso=sucesso
-            )
+            return render_template("cadastro.html", erro=erro, sucesso=sucesso)
+
+        if len(senha) < 4:
+            erro = "Sua senha precisa ter pelo menos 4 caracteres."
+            return render_template("cadastro.html", erro=erro, sucesso=sucesso)
 
         con = conectar()
         cur = con.cursor()
 
-        usuario_existente = cur.execute("""
+        email_existente = cur.execute("""
             SELECT id
             FROM usuarios
-            WHERE usuario = ?
-        """, (usuario,)).fetchone()
+            WHERE LOWER(email) = LOWER(?)
+              AND TRIM(COALESCE(email, '')) <> ''
+        """, (email,)).fetchone()
 
-        if usuario_existente:
+        if email_existente:
             con.close()
-            erro = "Esse usuário já existe."
-            return render_primeiro_template(
-                ["cadastro.html", "login.html"],
-                erro=erro,
-                sucesso=sucesso
-            )
+            erro = "Esse e-mail já está cadastrado."
+            return render_template("cadastro.html", erro=erro, sucesso=sucesso)
 
-        slug = gerar_slug_unico(cur, nome or usuario)
+        base_usuario = email.split("@")[0].strip() or "usuario"
+        slug = gerar_slug_unico(cur, nome or base_usuario)
+
+        usuario_final = base_usuario
+        contador = 2
+
+        while cur.execute("""
+            SELECT id
+            FROM usuarios
+            WHERE LOWER(usuario) = LOWER(?)
+            LIMIT 1
+        """, (usuario_final,)).fetchone():
+            usuario_final = f"{base_usuario}{contador}"
+            contador += 1
 
         data_expiracao = (datetime.now() + timedelta(days=TESTE_GRATIS_DIAS)).strftime("%Y-%m-%d")
 
@@ -1131,10 +1259,10 @@ def cadastro():
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             nome,
-            usuario,
+            usuario_final,
             generate_password_hash(senha),
             slug,
-            "",
+            email,
             "teste",
             data_expiracao
         ))
@@ -1147,27 +1275,28 @@ def cadastro():
         con.commit()
         con.close()
 
-        sucesso = "Cadastro realizado com sucesso. Agora faça login."
-        return render_primeiro_template(
-            ["cadastro.html", "login.html"],
-            erro="",
-            sucesso=sucesso
-        )
+        sucesso = "Cadastro realizado com sucesso. Agora faça login com seu e-mail."
+        return render_template("cadastro.html", erro="", sucesso=sucesso)
 
-    return render_primeiro_template(
-        ["cadastro.html", "login.html"],
-        erro=erro,
-        sucesso=sucesso
-    )
+    return render_template("cadastro.html", erro=erro, sucesso=sucesso)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     erro = ""
+    sucesso = session.pop("sucesso_login", "")
 
     if request.method == "POST":
-        usuario = (request.form.get("usuario") or "").strip()
+        email = normalizar_email(request.form.get("email"))
         senha = (request.form.get("senha") or "").strip()
+
+        if not email or not senha:
+            erro = "Preencha seu e-mail e sua senha."
+            return render_template("login.html", erro=erro, sucesso=sucesso)
+
+        if not email_valido(email):
+            erro = "Informe um e-mail válido."
+            return render_template("login.html", erro=erro, sucesso=sucesso)
 
         con = conectar()
         cur = con.cursor()
@@ -1175,9 +1304,10 @@ def login():
         dados = cur.execute("""
             SELECT *
             FROM usuarios
-            WHERE usuario = ?
+            WHERE LOWER(email) = LOWER(?)
+              AND TRIM(COALESCE(email, '')) <> ''
             LIMIT 1
-        """, (usuario,)).fetchone()
+        """, (email,)).fetchone()
 
         con.close()
 
@@ -1191,9 +1321,195 @@ def login():
             garantir_dados_iniciais_usuario(dados["id"], dados["nome"] or "AgendaFlow")
             return redirect(url_for("dashboard"))
         else:
-            erro = "Usuário ou senha inválidos."
+            erro = "E-mail ou senha inválidos."
 
-    return render_template("login.html", erro=erro)
+    return render_template("login.html", erro=erro, sucesso=sucesso)
+
+
+@app.route("/esqueci-senha", methods=["GET", "POST"])
+def esqueci_senha():
+    erro = ""
+    sucesso = ""
+    info = ""
+    email_digitado = ""
+
+    if request.method == "POST":
+        email_digitado = normalizar_email(request.form.get("email"))
+
+        if not email_digitado:
+            erro = "Informe seu e-mail."
+            return render_template(
+                "esqueci_senha.html",
+                erro=erro,
+                sucesso=sucesso,
+                info=info,
+                email=email_digitado
+            )
+
+        if not email_valido(email_digitado):
+            erro = "Informe um e-mail válido."
+            return render_template(
+                "esqueci_senha.html",
+                erro=erro,
+                sucesso=sucesso,
+                info=info,
+                email=email_digitado
+            )
+
+        con = conectar()
+        cur = con.cursor()
+
+        usuario = cur.execute("""
+            SELECT id, nome, email
+            FROM usuarios
+            WHERE LOWER(email) = LOWER(?)
+              AND TRIM(COALESCE(email, '')) <> ''
+            LIMIT 1
+        """, (email_digitado,)).fetchone()
+
+        con.close()
+
+        sucesso = "Se esse e-mail estiver cadastrado, você receberá as instruções para redefinir sua senha."
+
+        if usuario:
+            token = gerar_token_recuperacao(usuario["email"])
+            link_recuperacao = f"{montar_url_base()}{url_for('redefinir_senha', token=token)}"
+
+            try:
+                if smtp_configurado():
+                    enviar_email_recuperacao(usuario["nome"], usuario["email"], link_recuperacao)
+                else:
+                    if app.debug:
+                        info = f"SMTP não configurado. Em desenvolvimento, use este link: {link_recuperacao}"
+                    else:
+                        info = "O servidor ainda não está configurado para envio de e-mails. Configure o SMTP para ativar a recuperação por e-mail."
+            except Exception as exc:
+                erro = f"Não foi possível enviar o e-mail de recuperação: {exc}"
+                sucesso = ""
+
+        return render_template(
+            "esqueci_senha.html",
+            erro=erro,
+            sucesso=sucesso,
+            info=info,
+            email=email_digitado
+        )
+
+    return render_template(
+        "esqueci_senha.html",
+        erro=erro,
+        sucesso=sucesso,
+        info=info,
+        email=email_digitado
+    )
+
+
+@app.route("/redefinir-senha/<token>", methods=["GET", "POST"])
+def redefinir_senha(token):
+    erro = ""
+    sucesso = ""
+    email_token = ""
+
+    try:
+        email_token = validar_token_recuperacao(token)
+    except SignatureExpired:
+        erro = "Esse link expirou. Solicite uma nova recuperação de senha."
+        return render_template(
+            "redefinir_senha.html",
+            erro=erro,
+            sucesso=sucesso,
+            token_valido=False,
+            email=""
+        )
+    except BadSignature:
+        erro = "Link inválido de recuperação de senha."
+        return render_template(
+            "redefinir_senha.html",
+            erro=erro,
+            sucesso=sucesso,
+            token_valido=False,
+            email=""
+        )
+
+    con = conectar()
+    cur = con.cursor()
+
+    usuario = cur.execute("""
+        SELECT id, nome, email
+        FROM usuarios
+        WHERE LOWER(email) = LOWER(?)
+          AND TRIM(COALESCE(email, '')) <> ''
+        LIMIT 1
+    """, (email_token,)).fetchone()
+
+    if not usuario:
+        con.close()
+        erro = "Conta não encontrada para esse link."
+        return render_template(
+            "redefinir_senha.html",
+            erro=erro,
+            sucesso=sucesso,
+            token_valido=False,
+            email=""
+        )
+
+    if request.method == "POST":
+        senha = (request.form.get("senha") or "").strip()
+        confirmar_senha = (request.form.get("confirmar_senha") or "").strip()
+
+        if not senha or not confirmar_senha:
+            con.close()
+            erro = "Preencha os dois campos de senha."
+            return render_template(
+                "redefinir_senha.html",
+                erro=erro,
+                sucesso=sucesso,
+                token_valido=True,
+                email=usuario["email"]
+            )
+
+        if senha != confirmar_senha:
+            con.close()
+            erro = "As senhas não coincidem."
+            return render_template(
+                "redefinir_senha.html",
+                erro=erro,
+                sucesso=sucesso,
+                token_valido=True,
+                email=usuario["email"]
+            )
+
+        if len(senha) < 4:
+            con.close()
+            erro = "Sua nova senha precisa ter pelo menos 4 caracteres."
+            return render_template(
+                "redefinir_senha.html",
+                erro=erro,
+                sucesso=sucesso,
+                token_valido=True,
+                email=usuario["email"]
+            )
+
+        cur.execute("""
+            UPDATE usuarios
+            SET senha = ?
+            WHERE id = ?
+        """, (generate_password_hash(senha), usuario["id"]))
+
+        con.commit()
+        con.close()
+
+        session["sucesso_login"] = "Senha redefinida com sucesso. Agora entre com sua nova senha."
+        return redirect(url_for("login"))
+
+    con.close()
+    return render_template(
+        "redefinir_senha.html",
+        erro=erro,
+        sucesso=sucesso,
+        token_valido=True,
+        email=usuario["email"]
+    )
 
 
 @app.route("/logout")
@@ -2419,8 +2735,8 @@ def assinar():
             info=f"Seu plano mensal será cobrado automaticamente em R$ {PLANO_VALOR:.2f}/mês pelo Mercado Pago."
         )
 
-    email = (request.form.get("email") or "").strip().lower()
-    if not email:
+    email = normalizar_email(request.form.get("email"))
+    if not email or not email_valido(email):
         return pagina_assinatura_html(
             config=config,
             email_atual=email_atual,

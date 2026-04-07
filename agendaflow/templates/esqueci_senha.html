@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Criar conta - AgendaFlow</title>
+<title>Recuperar senha - AgendaFlow</title>
 
 <style>
 * {
@@ -54,31 +54,17 @@ box-shadow: 0 10px 24px rgba(123, 90, 224, 0.22);
 }
 
 h1 {
-font-size: 34px;
+font-size: 30px;
 color: #57486c;
 margin-bottom: 6px;
 }
 
 .sub {
 color: #8a7f9c;
-font-size: 16px;
-line-height: 1.5;
-margin-bottom: 12px;
-}
-
-.teste {
-background: linear-gradient(135deg, rgba(231,143,179,0.15), rgba(123,90,224,0.12));
-border: 1px solid rgba(180,135,234,0.25);
-padding: 12px;
-border-radius: 14px;
-font-size: 14px;
-color: #6c5d81;
+font-size: 15px;
+line-height: 1.6;
 margin-bottom: 16px;
 text-align: center;
-}
-
-.teste strong {
-color: #7b5ae0;
 }
 
 .erro {
@@ -101,8 +87,15 @@ margin-bottom: 18px;
 font-size: 14px;
 }
 
-form {
-margin-top: 8px;
+.info {
+background: #faf6ff;
+color: #5f536d;
+border: 1px solid #eadff4;
+padding: 12px 14px;
+border-radius: 14px;
+margin-bottom: 18px;
+font-size: 14px;
+word-break: break-word;
 }
 
 .campo {
@@ -166,40 +159,17 @@ color: #7b5ae0;
 font-weight: bold;
 text-decoration: none;
 }
-
-@media (max-width: 520px) {
-.card {
-padding: 28px 20px;
-border-radius: 24px;
-}
-
-h1 {
-font-size: 28px;
-}
-
-.logo {
-width: 70px;
-height: 70px;
-font-size: 28px;
-}
-}
 </style>
 </head>
-
 <body>
 
 <div class="card">
-
 <div class="topo">
 <div class="logo">A</div>
-<h1>Criar conta</h1>
+<h1>Recuperar senha</h1>
 <div class="sub">
-Cadastre-se para acessar sua agenda e começar a organizar seus atendimentos.
+Informe o e-mail da sua conta para receber o link de redefinição.
 </div>
-</div>
-
-<div class="teste">
-🎁 Você ganha <strong>7 dias grátis</strong> para testar o AgendaFlow.
 </div>
 
 {% if erro %}
@@ -210,39 +180,22 @@ Cadastre-se para acessar sua agenda e começar a organizar seus atendimentos.
 <div class="sucesso">{{ sucesso }}</div>
 {% endif %}
 
+{% if info %}
+<div class="info">{{ info }}</div>
+{% endif %}
+
 <form method="POST">
-
-<div class="campo">
-<label>Nome</label>
-<input type="text" name="nome" placeholder="Seu nome completo" required>
-</div>
-
 <div class="campo">
 <label>E-mail</label>
-<input type="email" name="email" placeholder="Seu melhor e-mail" required>
+<input type="email" name="email" placeholder="seuemail@exemplo.com" value="{{ email or '' }}" required>
 </div>
 
-<div class="campo">
-<label>Senha</label>
-<input type="password" name="senha" placeholder="Crie uma senha" required>
-</div>
-
-<div class="campo">
-<label>Confirmar senha</label>
-<input type="password" name="confirmar_senha" placeholder="Repita sua senha" required>
-</div>
-
-<button type="submit" class="btn">
-Criar conta
-</button>
-
+<button type="submit" class="btn">Enviar link</button>
 </form>
 
 <div class="rodape">
-Já tem conta?
-<a href="{{ url_for('login') }}">Entrar</a>
+<a href="{{ url_for('login') }}">Voltar para o login</a>
 </div>
-
 </div>
 
 </body>
