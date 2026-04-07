@@ -116,6 +116,10 @@ def normalizar_email(email):
     return (email or "").strip().lower()
 
 
+def normalizar_telefone(telefone):
+    return re.sub(r"\D", "", telefone or "")
+
+
 def email_valido(email):
     email = normalizar_email(email)
     return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
@@ -209,6 +213,56 @@ def enviar_email_recuperacao(nome, email, link_recuperacao):
     """
 
     enviar_email(email, assunto, corpo_texto, corpo_html)
+
+
+def buscar_ou_criar_cliente(cur, usuario_id, nome, telefone, observacoes=""):
+    nome = (nome or "").strip()
+    telefone = normalizar_telefone(telefone)
+    observacoes = (observacoes or "").strip()
+
+    cliente_existente = None
+
+    if telefone:
+        cliente_existente = cur.execute("""
+            SELECT id, nome, telefone, observacoes
+            FROM clientes
+            WHERE usuario_id = ? AND telefone = ?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (usuario_id, telefone)).fetchone()
+
+    if not cliente_existente and nome:
+        cliente_existente = cur.execute("""
+            SELECT id, nome, telefone, observacoes
+            FROM clientes
+            WHERE usuario_id = ? AND LOWER(TRIM(nome)) = LOWER(TRIM(?))
+            ORDER BY id DESC
+            LIMIT 1
+        """, (usuario_id, nome)).fetchone()
+
+    if cliente_existente:
+        nome_atual = (cliente_existente["nome"] or "").strip()
+        telefone_atual = normalizar_telefone(cliente_existente["telefone"] or "")
+        observacoes_atuais = (cliente_existente["observacoes"] or "").strip()
+
+        novo_nome = nome_atual or nome
+        novo_telefone = telefone_atual or telefone
+        novas_observacoes = observacoes_atuais or observacoes
+
+        cur.execute("""
+            UPDATE clientes
+            SET nome = ?, telefone = ?, observacoes = ?
+            WHERE id = ?
+        """, (novo_nome, novo_telefone, novas_observacoes, cliente_existente["id"]))
+
+        return cliente_existente["id"]
+
+    cur.execute("""
+        INSERT INTO clientes (usuario_id, nome, telefone, observacoes)
+        VALUES (?, ?, ?, ?)
+    """, (usuario_id, nome, telefone, observacoes))
+
+    return cur.lastrowid
 
 
 def criar_usuario_padrao_se_nao_existir(cur):
@@ -488,6 +542,7 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS agendamentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
+            cliente_id INTEGER,
             cliente TEXT,
             telefone TEXT,
             servico TEXT,
@@ -501,6 +556,9 @@ def criar_tabelas():
     if not coluna_existe(cur, "agendamentos", "usuario_id"):
         cur.execute("ALTER TABLE agendamentos ADD COLUMN usuario_id INTEGER")
 
+    if not coluna_existe(cur, "agendamentos", "cliente_id"):
+        cur.execute("ALTER TABLE agendamentos ADD COLUMN cliente_id INTEGER")
+
     if not coluna_existe(cur, "agendamentos", "observacoes"):
         cur.execute("ALTER TABLE agendamentos ADD COLUMN observacoes TEXT DEFAULT ''")
 
@@ -509,6 +567,38 @@ def criar_tabelas():
         SET usuario_id = ?
         WHERE usuario_id IS NULL
     """, (admin_id,))
+
+    agendamentos_sem_cliente_id = cur.execute("""
+        SELECT id, usuario_id, cliente, telefone, observacoes
+        FROM agendamentos
+        WHERE cliente_id IS NULL
+    """).fetchall()
+
+    for ag in agendamentos_sem_cliente_id:
+        usuario_ag = ag["usuario_id"]
+        nome_cliente = (ag["cliente"] or "").strip()
+        telefone_cliente = normalizar_telefone(ag["telefone"] or "")
+        observacoes_cliente = (ag["observacoes"] or "").strip()
+
+        if not usuario_ag:
+            continue
+
+        if not nome_cliente and not telefone_cliente:
+            continue
+
+        cliente_id = buscar_ou_criar_cliente(
+            cur,
+            usuario_ag,
+            nome_cliente,
+            telefone_cliente,
+            observacoes_cliente
+        )
+
+        cur.execute("""
+            UPDATE agendamentos
+            SET cliente_id = ?
+            WHERE id = ?
+        """, (cliente_id, ag["id"]))
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS disponibilidade_dia (
@@ -1534,10 +1624,16 @@ def dashboard():
     cur = con.cursor()
 
     agendamentos = cur.execute("""
-        SELECT *
-        FROM agendamentos
-        WHERE usuario_id = ?
-        ORDER BY data ASC, hora ASC
+        SELECT
+            a.*,
+            COALESCE(c.nome, a.cliente) AS nome_cliente,
+            COALESCE(c.telefone, a.telefone) AS telefone_cliente
+        FROM agendamentos a
+        LEFT JOIN clientes c
+            ON c.id = a.cliente_id
+           AND c.usuario_id = a.usuario_id
+        WHERE a.usuario_id = ?
+        ORDER BY a.data ASC, a.hora ASC
     """, (usuario_id,)).fetchall()
 
     total_agendamentos = cur.execute("""
@@ -1635,12 +1731,22 @@ def agenda():
         proximo_mes_data = f"{ano:04d}-{mes + 1:02d}-01"
 
     agendamentos_bd = cur.execute("""
-        SELECT id, cliente, telefone, servico, data, hora, observacoes
-        FROM agendamentos
-        WHERE usuario_id = ?
-          AND data >= ?
-          AND data < ?
-        ORDER BY data ASC, hora ASC
+        SELECT
+            a.id,
+            COALESCE(c.nome, a.cliente) AS cliente,
+            COALESCE(c.telefone, a.telefone) AS telefone,
+            a.servico,
+            a.data,
+            a.hora,
+            a.observacoes
+        FROM agendamentos a
+        LEFT JOIN clientes c
+            ON c.id = a.cliente_id
+           AND c.usuario_id = a.usuario_id
+        WHERE a.usuario_id = ?
+          AND a.data >= ?
+          AND a.data < ?
+        ORDER BY a.data ASC, a.hora ASC
     """, (usuario_id, inicio_mes, proximo_mes_data)).fetchall()
 
     agendamentos_por_dia = {}
@@ -1670,10 +1776,20 @@ def agenda():
         try:
             data_obj = datetime.strptime(data_selecionada, "%Y-%m-%d")
             agendamentos_dia = cur.execute("""
-                SELECT id, cliente, telefone, servico, data, hora, observacoes AS observacao
-                FROM agendamentos
-                WHERE usuario_id = ? AND data = ?
-                ORDER BY hora ASC
+                SELECT
+                    a.id,
+                    COALESCE(c.nome, a.cliente) AS cliente,
+                    COALESCE(c.telefone, a.telefone) AS telefone,
+                    a.servico,
+                    a.data,
+                    a.hora,
+                    a.observacoes AS observacao
+                FROM agendamentos a
+                LEFT JOIN clientes c
+                    ON c.id = a.cliente_id
+                   AND c.usuario_id = a.usuario_id
+                WHERE a.usuario_id = ? AND a.data = ?
+                ORDER BY a.hora ASC
             """, (usuario_id, data_selecionada)).fetchall()
 
             data_formatada = data_obj.strftime("%d/%m/%Y")
@@ -1741,10 +1857,20 @@ def agenda_dia(data):
     cur = con.cursor()
 
     agendamentos_dia = cur.execute("""
-        SELECT id, cliente, telefone, servico, data, hora, observacoes AS observacao
-        FROM agendamentos
-        WHERE usuario_id = ? AND data = ?
-        ORDER BY hora ASC
+        SELECT
+            a.id,
+            COALESCE(c.nome, a.cliente) AS cliente,
+            COALESCE(c.telefone, a.telefone) AS telefone,
+            a.servico,
+            a.data,
+            a.hora,
+            a.observacoes AS observacao
+        FROM agendamentos a
+        LEFT JOIN clientes c
+            ON c.id = a.cliente_id
+           AND c.usuario_id = a.usuario_id
+        WHERE a.usuario_id = ? AND a.data = ?
+        ORDER BY a.hora ASC
     """, (usuario_id, data)).fetchall()
 
     con.close()
@@ -2249,7 +2375,7 @@ def clientes():
 
     if request.method == "POST":
         nome = (request.form.get("nome") or "").strip()
-        telefone = (request.form.get("telefone") or "").strip()
+        telefone = normalizar_telefone(request.form.get("telefone"))
         observacoes = (request.form.get("observacoes") or "").strip()
 
         if nome:
@@ -2382,9 +2508,10 @@ def agendar_publico_slug(slug):
         )
 
     cliente = (request.form.get("cliente") or "").strip()
-    telefone = (request.form.get("telefone") or "").strip()
+    telefone = normalizar_telefone(request.form.get("telefone"))
     servico = (request.form.get("servico") or "").strip()
     hora = (request.form.get("hora") or "").strip()
+    observacoes = (request.form.get("observacoes") or "").strip()
 
     if not cliente or not servico or not data_selecionada or not hora:
         erro = "Preencha nome, serviço, data e horário."
@@ -2462,36 +2589,29 @@ def agendar_publico_slug(slug):
             config=config
         )
 
-    coluna_nome_cliente = obter_coluna_nome_cliente_agendamentos(cur)
+    cliente_id = buscar_ou_criar_cliente(
+        cur,
+        usuario_id,
+        cliente,
+        telefone,
+        observacoes
+    )
 
-    if coluna_nome_cliente == "cliente_nome":
-        cur.execute(f"""
-            INSERT INTO agendamentos
-            (usuario_id, {coluna_nome_cliente}, telefone, servico, data, hora, criado_em)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            usuario_id,
-            cliente,
-            telefone,
-            servico,
-            data_selecionada,
-            hora,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ))
-    else:
-        cur.execute("""
-            INSERT INTO agendamentos
-            (usuario_id, cliente, telefone, servico, data, hora, criado_em)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            usuario_id,
-            cliente,
-            telefone,
-            servico,
-            data_selecionada,
-            hora,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ))
+    cur.execute("""
+        INSERT INTO agendamentos
+        (usuario_id, cliente_id, cliente, telefone, servico, data, hora, criado_em, observacoes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        usuario_id,
+        cliente_id,
+        cliente,
+        telefone,
+        servico,
+        data_selecionada,
+        hora,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        observacoes
+    ))
 
     con.commit()
     con.close()
@@ -2616,10 +2736,15 @@ def financeiro():
     cur = con.cursor()
 
     agendamentos = cur.execute("""
-        SELECT *
-        FROM agendamentos
-        WHERE usuario_id = ?
-        ORDER BY data DESC, hora DESC
+        SELECT
+            a.*,
+            COALESCE(c.nome, a.cliente) AS nome_cliente
+        FROM agendamentos a
+        LEFT JOIN clientes c
+            ON c.id = a.cliente_id
+           AND c.usuario_id = a.usuario_id
+        WHERE a.usuario_id = ?
+        ORDER BY a.data DESC, a.hora DESC
     """, (usuario_id,)).fetchall()
 
     dados = []
@@ -2637,7 +2762,7 @@ def financeiro():
         total += preco
 
         dados.append({
-            "cliente": a["cliente"] if "cliente" in a.keys() else a["cliente_nome"],
+            "cliente": a["nome_cliente"] or a["cliente"] or "",
             "servico": a["servico"],
             "data": a["data"],
             "hora": a["hora"],
