@@ -1,13 +1,12 @@
 {
   "name": "AgendaFlow",
   "short_name": "AgendaFlow",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#7b5ae0",
   "description": "Sistema de agendamento online com link para clientes",
-
   "icons": [
     {
       "src": "/static/icons/icon-192.png",

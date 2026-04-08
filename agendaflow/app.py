@@ -648,6 +648,41 @@ def criar_tabelas():
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS notificacoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            tipo TEXT DEFAULT 'agendamento',
+            titulo TEXT DEFAULT '',
+            mensagem TEXT DEFAULT '',
+            link TEXT DEFAULT '/agenda',
+            lida INTEGER DEFAULT 0,
+            criado_em TEXT,
+            payload_json TEXT DEFAULT ''
+        )
+    """)
+
+    if not coluna_existe(cur, "notificacoes", "tipo"):
+        cur.execute("ALTER TABLE notificacoes ADD COLUMN tipo TEXT DEFAULT 'agendamento'")
+
+    if not coluna_existe(cur, "notificacoes", "titulo"):
+        cur.execute("ALTER TABLE notificacoes ADD COLUMN titulo TEXT DEFAULT ''")
+
+    if not coluna_existe(cur, "notificacoes", "mensagem"):
+        cur.execute("ALTER TABLE notificacoes ADD COLUMN mensagem TEXT DEFAULT ''")
+
+    if not coluna_existe(cur, "notificacoes", "link"):
+        cur.execute("ALTER TABLE notificacoes ADD COLUMN link TEXT DEFAULT '/agenda'")
+
+    if not coluna_existe(cur, "notificacoes", "lida"):
+        cur.execute("ALTER TABLE notificacoes ADD COLUMN lida INTEGER DEFAULT 0")
+
+    if not coluna_existe(cur, "notificacoes", "criado_em"):
+        cur.execute("ALTER TABLE notificacoes ADD COLUMN criado_em TEXT")
+
+    if not coluna_existe(cur, "notificacoes", "payload_json"):
+        cur.execute("ALTER TABLE notificacoes ADD COLUMN payload_json TEXT DEFAULT ''")
+
     garantir_configuracao_usuario(cur, admin_id, "AgendaFlow")
 
     con.commit()
@@ -672,6 +707,15 @@ def adicionar_dias(data_base, dias):
 
 
 def formatar_data_br(data_str):
+    if not data_str:
+        return ""
+    try:
+        return datetime.strptime(data_str[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
+    except ValueError:
+        return data_str
+
+
+def formatar_data_br_curta(data_str):
     if not data_str:
         return ""
     try:
@@ -1239,6 +1283,104 @@ def buscar_slug_usuario(usuario_id):
     return ""
 
 
+def gerar_link_whatsapp_admin(usuario_id, cliente, servico, data_agendamento, hora_agendamento):
+    config = obter_configuracoes(usuario_id)
+    whatsapp = re.sub(r"\D", "", config.get("whatsapp", ""))
+
+    if not whatsapp:
+        return ""
+
+    mensagem = (
+        "🔔 Novo agendamento recebido no AgendaFlow\n\n"
+        f"Cliente: {cliente or '-'}\n"
+        f"Serviço: {servico or '-'}\n"
+        f"Data: {formatar_data_br_curta(data_agendamento)}\n"
+        f"Horário: {hora_agendamento or '-'}"
+    )
+
+    return f"https://wa.me/{whatsapp}?text={urllib.parse.quote(mensagem)}"
+
+
+def criar_notificacao_agendamento(cur, usuario_id, cliente, servico, data_agendamento, hora_agendamento, agendamento_id):
+    titulo = "Novo agendamento"
+    mensagem = f"{cliente or 'Cliente'} agendou {servico or 'um serviço'} para {formatar_data_br_curta(data_agendamento)} às {hora_agendamento}"
+
+    payload = {
+        "cliente": cliente or "",
+        "servico": servico or "",
+        "data": formatar_data_br_curta(data_agendamento),
+        "hora": hora_agendamento or "",
+        "agendamento_id": agendamento_id,
+        "whatsapp_link": gerar_link_whatsapp_admin(
+            usuario_id, cliente, servico, data_agendamento, hora_agendamento
+        )
+    }
+
+    cur.execute("""
+        INSERT INTO notificacoes (
+            usuario_id, tipo, titulo, mensagem, link, lida, criado_em, payload_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        usuario_id,
+        "agendamento",
+        titulo,
+        mensagem,
+        "/agenda",
+        0,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        json.dumps(payload, ensure_ascii=False)
+    ))
+
+
+def listar_notificacoes_usuario(usuario_id, limite=15):
+    con = conectar()
+    cur = con.cursor()
+
+    rows = cur.execute("""
+        SELECT *
+        FROM notificacoes
+        WHERE usuario_id = ?
+        ORDER BY datetime(criado_em) DESC, id DESC
+        LIMIT ?
+    """, (usuario_id, limite)).fetchall()
+
+    total_nao_lidas = cur.execute("""
+        SELECT COUNT(*) AS total
+        FROM notificacoes
+        WHERE usuario_id = ? AND lida = 0
+    """, (usuario_id,)).fetchone()["total"]
+
+    con.close()
+
+    notificacoes = []
+
+    for row in rows:
+        payload = {}
+        try:
+            payload = json.loads(row["payload_json"] or "{}")
+        except Exception:
+            payload = {}
+
+        notificacoes.append({
+            "id": row["id"],
+            "tipo": row["tipo"] or "",
+            "titulo": row["titulo"] or "",
+            "mensagem": row["mensagem"] or "",
+            "link": row["link"] or "/agenda",
+            "lida": int(row["lida"] or 0),
+            "criado_em": row["criado_em"] or "",
+            "cliente": payload.get("cliente", ""),
+            "servico": payload.get("servico", ""),
+            "data": payload.get("data", ""),
+            "hora": payload.get("hora", ""),
+            "agendamento_id": payload.get("agendamento_id"),
+            "whatsapp_link": payload.get("whatsapp_link", "")
+        })
+
+    return notificacoes, total_nao_lidas
+
+
 # --------------------------------------------------
 # CADASTRO / LOGIN
 # --------------------------------------------------
@@ -1266,7 +1408,9 @@ def proteger_rotas_com_plano():
         "assinar",
         "assinatura_bloqueada",
         "logout",
-        "verificar_novos"
+        "verificar_novos",
+        "notificacoes",
+        "marcar_notificacao_como_lida"
     }
 
     if endpoint.startswith("static"):
@@ -2613,6 +2757,18 @@ def agendar_publico_slug(slug):
         observacoes
     ))
 
+    agendamento_id = cur.lastrowid
+
+    criar_notificacao_agendamento(
+        cur,
+        usuario_id,
+        cliente,
+        servico,
+        data_selecionada,
+        hora,
+        agendamento_id
+    )
+
     con.commit()
     con.close()
 
@@ -2702,25 +2858,58 @@ def excluir_agendamento(id):
 @app.route("/verificar_novos")
 def verificar_novos():
     if not usuario_logado():
-        return {"ultimo": ""}
+        return jsonify({
+            "ultimo_id": 0,
+            "nao_lidas": 0,
+            "notificacoes": []
+        })
 
     usuario_id = usuario_id_logado()
+    notificacoes, total_nao_lidas = listar_notificacoes_usuario(usuario_id, limite=8)
+
+    ultimo_id = notificacoes[0]["id"] if notificacoes else 0
+
+    return jsonify({
+        "ultimo_id": ultimo_id,
+        "nao_lidas": total_nao_lidas,
+        "notificacoes": notificacoes
+    })
+
+
+@app.route("/notificacoes")
+def notificacoes():
+    if not usuario_logado():
+        return jsonify([])
+
+    usuario_id = usuario_id_logado()
+    notificacoes_lista, _ = listar_notificacoes_usuario(usuario_id, limite=20)
+
+    return jsonify(notificacoes_lista)
+
+
+@app.route("/notificacoes/<int:notificacao_id>/ler", methods=["POST"])
+def marcar_notificacao_como_lida(notificacao_id):
+    if not usuario_logado():
+        return jsonify({"ok": False, "erro": "Não autenticado"}), 401
+
+    usuario_id = usuario_id_logado()
+
     con = conectar()
     cur = con.cursor()
 
-    ultimo = cur.execute("""
-        SELECT criado_em
-        FROM agendamentos
-        WHERE usuario_id = ?
-        ORDER BY criado_em DESC
-        LIMIT 1
-    """, (usuario_id,)).fetchone()
+    cur.execute("""
+        UPDATE notificacoes
+        SET lida = 1
+        WHERE id = ? AND usuario_id = ?
+    """, (notificacao_id, usuario_id))
 
+    con.commit()
+    alteradas = cur.rowcount
     con.close()
 
-    if ultimo:
-        return {"ultimo": ultimo["criado_em"]}
-    return {"ultimo": ""}
+    return jsonify({
+        "ok": alteradas > 0
+    })
 
 
 # --------------------------------------------------

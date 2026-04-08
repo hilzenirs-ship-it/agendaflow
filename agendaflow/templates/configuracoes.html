@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configurações - AgendaFlow</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='notifications.js') }}" defer></script>
 
     <style>
         .ajuda-campo {
@@ -82,51 +84,59 @@
             font-weight: bold;
             text-decoration: none;
         }
+
+        .topbar-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
     </style>
 </head>
 
 <body>
     <div class="app-shell">
         <div class="topbar">
-            <div>
-                <span class="brand-mini">AgendaFlow</span>
-                <h2 class="page-title">Configurações</h2>
+            <div class="topbar-flex">
+                <div>
+                    <span class="brand-mini">AgendaFlow</span>
+                    <h2 class="page-title">Configurações</h2>
+                </div>
+
+                <div class="notif-wrapper">
+                    <button id="notif-toggle" class="notif-toggle" type="button">🔔
+                        <span id="notif-badge" class="notif-badge">0</span>
+                    </button>
+
+                    <div id="notif-dropdown" class="notif-dropdown">
+                        <div class="notif-topo">
+                            <h3>Novos agendamentos</h3>
+                            <button id="notif-marcar-todas" type="button">Marcar tudo</button>
+                        </div>
+
+                        <div id="notif-vazio" class="notif-vazio">Nenhuma notificação por enquanto.</div>
+                        <div id="notif-list" class="notif-lista"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="container">
             <div class="card">
-
                 <p class="subtexto central">Personalize seu aplicativo</p>
 
                 <div class="plano-box">
-
                     <div class="plano-titulo">Seu plano</div>
 
                     {% if plano_ativo %}
                         <div class="plano-status ativo">Teste grátis ativo</div>
-
-                        <div class="plano-texto">
-                            Seu acesso está liberado até <strong>{{ data_expiracao }}</strong>
-                        </div>
-
-                        <!-- 🔥 BOTÃO AGORA TAMBÉM NO TESTE -->
-                        <a href="/assinar" class="btn-plano">
-                            Assinar por R$ 14,99/mês
-                        </a>
-
+                        <div class="plano-texto">Seu acesso está liberado até <strong>{{ data_expiracao }}</strong></div>
+                        <a href="/assinar" class="btn-plano">Assinar por R$ 14,99/mês</a>
                     {% else %}
                         <div class="plano-status vencido">Plano necessário</div>
-
-                        <div class="plano-texto">
-                            Seu teste terminou. Ative o plano para continuar usando o sistema.
-                        </div>
-
-                        <a href="/assinar" class="btn-plano">
-                            Assinar por R$ 14,99/mês
-                        </a>
+                        <div class="plano-texto">Seu teste terminou. Ative o plano para continuar usando o sistema.</div>
+                        <a href="/assinar" class="btn-plano">Assinar por R$ 14,99/mês</a>
                     {% endif %}
-
                 </div>
 
                 <div class="caixa-info">
@@ -137,22 +147,8 @@
                 </div>
 
                 <form method="POST">
-
-                    <input
-                        type="text"
-                        name="nome_profissional"
-                        placeholder="Nome do studio"
-                        value="{{ config['nome_profissional'] }}"
-                        required
-                    >
-
-                    <input
-                        type="text"
-                        name="whatsapp"
-                        placeholder="Ex.: 5516999999999"
-                        value="{{ config['whatsapp'] }}"
-                        required
-                    >
+                    <input type="text" name="nome_profissional" placeholder="Nome do studio" value="{{ config['nome_profissional'] }}" required>
+                    <input type="text" name="whatsapp" placeholder="Ex.: 5516999999999" value="{{ config['whatsapp'] }}" required>
 
                     <div class="ajuda-campo">
                         Use o número com código do país + DDD + número.
@@ -161,15 +157,15 @@
                     <button type="submit" class="botao full">
                         Salvar configurações
                     </button>
-
                 </form>
 
                 <a class="botao secundario full" href="/dashboard">
                     Voltar
                 </a>
-
             </div>
         </div>
+
+        <div id="toast-notificacao" class="toast-notificacao"></div>
     </div>
 </body>
 </html>

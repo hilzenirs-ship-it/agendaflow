@@ -135,12 +135,6 @@
             box-shadow: 0 8px 18px rgba(123, 90, 224, 0.18);
         }
 
-        .botao-secundario {
-            background: #f6effb;
-            color: #6d5a82;
-            border: 1px solid #e4d8f1;
-        }
-
         .botao-whatsapp {
             background: #25D366;
             color: white;
@@ -180,7 +174,6 @@
 
 <body>
     <div class="card">
-
         <div class="marca">
             {{ config.nome_profissional if config else 'AgendaFlow' }}
         </div>
@@ -198,7 +191,6 @@
 
         <div class="resumo">
             <h3>Resumo do seu agendamento</h3>
-
             <div class="linha"><strong>Nome:</strong> {{ cliente or 'Não informado' }}</div>
             <div class="linha"><strong>Serviço:</strong> {{ servico or 'Não informado' }}</div>
             <div class="linha"><strong>Data:</strong> {{ data_agendamento or 'Não informada' }}</div>
@@ -206,13 +198,9 @@
         </div>
 
         <div class="acoes">
-            <button type="button" class="botao botao-primario" onclick="window.history.back()">
+            <a href="/studio/{{ slug }}" class="botao botao-primario">
                 Fazer novo agendamento
-            </button>
-
-            <button type="button" class="botao botao-secundario" onclick="window.location.href='/'">
-                Voltar ao início
-            </button>
+            </a>
 
             {% if config and config.whatsapp %}
                 <a href="https://wa.me/55{{ config.whatsapp }}?text={{ mensagem_whatsapp }}"
@@ -226,7 +214,6 @@
         <div class="rodape">
             Obrigada por agendar com {{ config.nome_profissional if config else 'AgendaFlow' }}.
         </div>
-
     </div>
 </body>
 </html>

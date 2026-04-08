@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel - {{ config['nome_profissional'] if config else 'AgendaFlow' }}</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <script src="{{ url_for('static', filename='notifications.js') }}" defer></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -31,14 +34,6 @@
             --danger-text: #b24065;
             --shadow: 0 12px 28px rgba(90, 61, 119, 0.08);
             --shadow-soft: 0 8px 20px rgba(90, 61, 119, 0.07);
-            --radius-xl: 28px;
-            --radius-lg: 24px;
-            --radius-md: 20px;
-            --radius-sm: 16px;
-        }
-
-        html {
-            scroll-behavior: smooth;
         }
 
         body {
@@ -70,6 +65,13 @@
             position: sticky;
             top: 0;
             z-index: 10;
+        }
+
+        .topo-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            justify-content: space-between;
         }
 
         .marca {
@@ -107,6 +109,170 @@
             font-size: 12px;
             font-weight: 700;
             backdrop-filter: blur(6px);
+        }
+
+        .notif-wrapper {
+            position: relative;
+        }
+
+        .notif-toggle {
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.16);
+            color: white;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            font-size: 19px;
+            font-weight: 800;
+            backdrop-filter: blur(6px);
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #ff4d6d;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notif-dropdown {
+            position: absolute;
+            top: 54px;
+            right: 0;
+            width: min(360px, calc(100vw - 24px));
+            background: rgba(255,255,255,0.98);
+            border: 1px solid #eadff4;
+            border-radius: 22px;
+            box-shadow: 0 18px 40px rgba(90, 61, 119, 0.12);
+            padding: 14px;
+            z-index: 50;
+            display: none;
+        }
+
+        .notif-dropdown.aberto { display: block; }
+
+        .notif-topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .notif-topo h3 {
+            font-size: 15px;
+            color: #4a3c59;
+            font-weight: 800;
+        }
+
+        .notif-topo button {
+            border: none;
+            background: #f6effb;
+            color: #6d5a82;
+            border-radius: 12px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .notif-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .notif-vazio {
+            font-size: 13px;
+            color: #8b7d98;
+            padding: 14px;
+            background: #fbf8fe;
+            border: 1px dashed #eadff4;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .notif-item {
+            background: linear-gradient(180deg, #fff 0%, #fcf9ff 100%);
+            border: 1px solid #eee4f7;
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .notif-item.nao-lida {
+            border-color: #d7c0f3;
+            box-shadow: 0 8px 20px rgba(123, 90, 224, 0.08);
+        }
+
+        .notif-item-topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .notif-item-titulo {
+            font-size: 14px;
+            font-weight: 800;
+            color: #4a3c59;
+        }
+
+        .notif-item-texto {
+            font-size: 13px;
+            color: #6f617d;
+            line-height: 1.45;
+            margin-bottom: 8px;
+        }
+
+        .notif-item-meta {
+            font-size: 11px;
+            color: #8d7fa0;
+            margin-bottom: 10px;
+        }
+
+        .notif-item-acoes {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .notif-mini-btn {
+            border: none;
+            background: #f6effb;
+            color: #6d5a82;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .notif-mini-btn.abrir {
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+        }
+
+        .notif-mini-btn.whats {
+            background: #25D366;
+            color: white;
         }
 
         .conteudo {
@@ -159,22 +325,6 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.18s ease, opacity 0.18s ease;
-        }
-
-        .botao-link:hover,
-        .menu-card:hover,
-        .nav-btn:hover,
-        .btn-link:hover {
-            transform: translateY(-1px);
-            opacity: 0.98;
-        }
-
-        .botao-link:active,
-        .menu-card:active,
-        .nav-btn:active,
-        .btn-link:active {
-            transform: scale(0.98);
         }
 
         .atalhos-titulo {
@@ -267,10 +417,6 @@
             gap: 12px;
         }
 
-        .link-info {
-            width: 100%;
-        }
-
         .link-info .valor {
             font-size: 14px;
             font-weight: 800;
@@ -295,23 +441,11 @@
             font-weight: 800;
             cursor: pointer;
             text-align: center;
-            transition: transform 0.18s ease, opacity 0.18s ease;
         }
 
-        .btn-abrir {
-            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
-            color: white;
-        }
-
-        .btn-copiar {
-            background: #efeaf7;
-            color: #5f5175;
-        }
-
-        .btn-whats {
-            background: #25D366;
-            color: white;
-        }
+        .btn-abrir { background: linear-gradient(135deg, #e78fb3, #7b5ae0); color: white; }
+        .btn-copiar { background: #efeaf7; color: #5f5175; }
+        .btn-whats { background: #25D366; color: white; }
 
         .menu-grid {
             display: grid;
@@ -331,7 +465,6 @@
             justify-content: flex-end;
             align-items: flex-start;
             box-shadow: 0 10px 22px rgba(123, 90, 224, 0.13);
-            transition: transform 0.18s ease, opacity 0.18s ease;
             position: relative;
             overflow: hidden;
         }
@@ -439,100 +572,60 @@
             box-shadow: 0 8px 16px rgba(123, 90, 224, 0.16);
         }
 
-        @media (min-width: 700px) {
-            .app-shell {
-                max-width: 900px;
-            }
-
-            .conteudo {
-                padding: 16px 18px 0;
-            }
-
-            .resumo-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-
-            .menu-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .plano-linha {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .link-novo {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .acoes-link {
-                display: flex;
-                flex-wrap: wrap;
-                width: auto;
-            }
-
-            .topo {
-                padding: 16px 16px 18px;
-            }
-
-            .topo h1 {
-                font-size: 22px;
-            }
+        .toast-notificacao {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-14px);
+            background: linear-gradient(135deg, #e78fb3, #7b5ae0);
+            color: white;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 14px 30px rgba(123, 90, 224, 0.20);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
         }
 
-        @media (max-width: 420px) {
-            .topo h1 {
-                font-size: 18px;
-            }
-
-            .topo p {
-                font-size: 12px;
-            }
-
-            .resumo-valor {
-                font-size: 17px;
-            }
-
-            .menu-card {
-                min-height: 92px;
-                padding: 13px;
-            }
-
-            .menu-texto {
-                font-size: 15px;
-            }
-
-            .acoes-inferiores {
-                grid-template-columns: repeat(4, 1fr);
-            }
-
-            .nav-btn {
-                font-size: 10px;
-                padding: 9px 3px;
-            }
-
-            .acoes-link {
-                grid-template-columns: 1fr;
-            }
+        .toast-notificacao.ativo {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            transition: .18s ease;
         }
     </style>
 </head>
 <body>
     <div class="app-shell">
         <div class="topo">
-            <div class="marca">AgendaFlow</div>
-            <h1>{{ config['nome_profissional'] if config else 'AgendaFlow' }}</h1>
-            <p>Gerencie sua agenda, clientes, serviços e faturamento em um visual mais moderno, leve e com cara de app.</p>
-            <div class="nome-studio">
-                ✨ Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}
+            <div class="topo-header">
+                <div>
+                    <div class="marca">AgendaFlow</div>
+                    <h1>{{ config['nome_profissional'] if config else 'AgendaFlow' }}</h1>
+                    <p>Gerencie sua agenda, clientes, serviços e faturamento em um visual mais moderno, leve e com cara de app.</p>
+                    <div class="nome-studio">✨ Studio: {{ config['nome_profissional'] if config else 'AgendaFlow' }}</div>
+                </div>
+
+                <div class="notif-wrapper">
+                    <button id="notif-toggle" class="notif-toggle" type="button">🔔
+                        <span id="notif-badge" class="notif-badge">0</span>
+                    </button>
+
+                    <div id="notif-dropdown" class="notif-dropdown">
+                        <div class="notif-topo">
+                            <h3>Novos agendamentos</h3>
+                            <button id="notif-marcar-todas" type="button">Marcar tudo</button>
+                        </div>
+
+                        <div id="notif-vazio" class="notif-vazio">Nenhuma notificação por enquanto.</div>
+                        <div id="notif-list" class="notif-lista"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="conteudo">
-
             <div class="bloco">
                 <div class="linha-topo">
                     <span class="badge">Plano AgendaFlow</span>
@@ -549,13 +642,9 @@
                             <div class="plano-titulo">Seu acesso ao sistema</div>
 
                             {% if plano_ativo %}
-                                <div class="plano-texto">
-                                    Seu teste grátis está liberado até <strong>{{ data_expiracao }}</strong>.
-                                </div>
+                                <div class="plano-texto">Seu teste grátis está liberado até <strong>{{ data_expiracao }}</strong>.</div>
                             {% else %}
-                                <div class="plano-texto">
-                                    Seu período grátis terminou. Ative o plano para continuar usando todas as funções do AgendaFlow.
-                                </div>
+                                <div class="plano-texto">Seu período grátis terminou. Ative o plano para continuar usando todas as funções do AgendaFlow.</div>
                             {% endif %}
 
                             <div class="plano-preco">Plano mensal: R$ 14,99</div>
@@ -651,7 +740,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
 
         <div class="acoes-inferiores">
@@ -661,6 +749,8 @@
             <a href="/configuracoes" class="nav-btn">Config</a>
         </div>
     </div>
+
+    <div id="toast-notificacao" class="toast-notificacao"></div>
 
     <script>
         function copiarLink(link) {

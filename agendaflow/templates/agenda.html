@@ -56,7 +56,7 @@
             box-shadow: 0 10px 24px rgba(123, 90, 224, 0.18);
             position: sticky;
             top: 0;
-            z-index: 20;
+            z-index: 40;
         }
 
         .topo-linha {
@@ -65,10 +65,18 @@
             gap: 14px;
         }
 
+        .topo-superior {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
         .marca-area {
             display: flex;
             flex-direction: column;
             gap: 4px;
+            min-width: 0;
         }
 
         .marca {
@@ -107,6 +115,124 @@
 
         .botao-topo:hover {
             background: rgba(255,255,255,0.24);
+        }
+
+        .notificacao-area {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sininho {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 8px 18px rgba(82, 49, 121, 0.18);
+            transition: 0.18s ease;
+            user-select: none;
+            font-size: 18px;
+        }
+
+        .sininho:hover {
+            background: rgba(255,255,255,0.24);
+            transform: translateY(-1px);
+        }
+
+        .badge-notificacao {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #ff4d6d;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 8px 14px rgba(255, 77, 109, 0.28);
+        }
+
+        .dropdown-notificacoes {
+            position: absolute;
+            right: 0;
+            top: 52px;
+            width: 300px;
+            max-width: calc(100vw - 32px);
+            background: rgba(255,255,255,0.98);
+            border-radius: 20px;
+            box-shadow: 0 18px 40px rgba(77, 54, 110, 0.16);
+            border: 1px solid #eee2f7;
+            overflow: hidden;
+            z-index: 60;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .notif-header {
+            padding: 14px 16px;
+            font-weight: 800;
+            font-size: 14px;
+            color: #4a3c59;
+            border-bottom: 1px solid #f1e8f8;
+            background: linear-gradient(180deg,#fff 0%,#faf5ff 100%);
+        }
+
+        .lista-notificacoes {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .notif-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f5eefb;
+            cursor: pointer;
+            transition: 0.18s ease;
+            background: white;
+        }
+
+        .notif-item:hover {
+            background: #faf7ff;
+        }
+
+        .notif-item.nao-lida {
+            background: linear-gradient(180deg,#fff 0%,#fcf8ff 100%);
+        }
+
+        .notif-item:last-child {
+            border-bottom: none;
+        }
+
+        .notif-titulo {
+            font-size: 13px;
+            font-weight: 800;
+            color: #4a3c59;
+            margin-bottom: 4px;
+            line-height: 1.35;
+        }
+
+        .notif-mensagem {
+            font-size: 12px;
+            color: #786b87;
+            line-height: 1.45;
+        }
+
+        .notif-vazio {
+            padding: 18px 14px;
+            text-align: center;
+            font-size: 13px;
+            color: #8a7f97;
         }
 
         .conteudo {
@@ -683,6 +809,10 @@
                 align-items: center;
             }
 
+            .topo-superior {
+                min-width: 260px;
+            }
+
             .acoes-dia {
                 display: flex;
                 flex-wrap: wrap;
@@ -759,6 +889,11 @@
             .nav-btn {
                 font-size: 10px;
             }
+
+            .dropdown-notificacoes {
+                right: -2px;
+                width: 290px;
+            }
         }
     </style>
 </head>
@@ -767,9 +902,25 @@
     <div class="app-shell">
         <div class="topo">
             <div class="topo-linha">
-                <div class="marca-area">
-                    <div class="marca">AgendaFlow</div>
-                    <div class="submarca">Calendário mensal</div>
+
+                <div class="topo-superior">
+                    <div class="marca-area">
+                        <div class="marca">AgendaFlow</div>
+                        <div class="submarca">Calendário mensal</div>
+                    </div>
+
+                    <div class="notificacao-area">
+                        <div class="sininho" onclick="toggleNotificacoes()">🔔
+                            <span id="badgeNotificacao" class="badge-notificacao">0</span>
+                        </div>
+
+                        <div id="dropdownNotificacoes" class="dropdown-notificacoes">
+                            <div class="notif-header">Notificações</div>
+                            <div id="listaNotificacoes" class="lista-notificacoes">
+                                <div class="notif-vazio">Carregando...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="acoes-topo">
@@ -963,6 +1114,120 @@
             <a href="/logout" class="nav-btn">Sair</a>
         </div>
     </div>
+
+    <script>
+        const dropdownNotificacoes = document.getElementById("dropdownNotificacoes");
+        const listaNotificacoes = document.getElementById("listaNotificacoes");
+        const badgeNotificacao = document.getElementById("badgeNotificacao");
+
+        function toggleNotificacoes() {
+            if (!dropdownNotificacoes) return;
+
+            const aberto = dropdownNotificacoes.style.display === "block";
+            dropdownNotificacoes.style.display = aberto ? "none" : "block";
+        }
+
+        function fecharNotificacoes() {
+            if (dropdownNotificacoes) {
+                dropdownNotificacoes.style.display = "none";
+            }
+        }
+
+        async function marcarNotificacaoComoLida(id) {
+            try {
+                await fetch(`/notificacoes/${id}/ler`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+            } catch (erro) {
+                console.error("Erro ao marcar notificação como lida:", erro);
+            }
+        }
+
+        function renderizarNotificacoes(lista) {
+            if (!listaNotificacoes || !badgeNotificacao) return;
+
+            listaNotificacoes.innerHTML = "";
+
+            if (!Array.isArray(lista) || lista.length === 0) {
+                listaNotificacoes.innerHTML = `<div class="notif-vazio">Nenhuma notificação por enquanto</div>`;
+                badgeNotificacao.style.display = "none";
+                return;
+            }
+
+            let naoLidas = 0;
+
+            lista.forEach((n) => {
+                if (!n.lida) {
+                    naoLidas += 1;
+                }
+
+                const item = document.createElement("div");
+                item.className = `notif-item ${n.lida ? "" : "nao-lida"}`;
+
+                item.innerHTML = `
+                    <div class="notif-titulo">${n.titulo || "Notificação"}</div>
+                    <div class="notif-mensagem">${n.mensagem || ""}</div>
+                `;
+
+                item.addEventListener("click", async function () {
+                    if (n.id && !n.lida) {
+                        await marcarNotificacaoComoLida(n.id);
+                    }
+
+                    window.location.href = n.link || "/agenda";
+                });
+
+                listaNotificacoes.appendChild(item);
+            });
+
+            if (naoLidas > 0) {
+                badgeNotificacao.textContent = naoLidas > 99 ? "99+" : String(naoLidas);
+                badgeNotificacao.style.display = "flex";
+            } else {
+                badgeNotificacao.style.display = "none";
+            }
+        }
+
+        async function carregarNotificacoes() {
+            try {
+                const resposta = await fetch("/notificacoes", {
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!resposta.ok) {
+                    throw new Error("Falha ao buscar notificações.");
+                }
+
+                const dados = await resposta.json();
+                renderizarNotificacoes(dados);
+            } catch (erro) {
+                console.error("Erro ao carregar notificações:", erro);
+
+                if (listaNotificacoes) {
+                    listaNotificacoes.innerHTML = `<div class="notif-vazio">Não foi possível carregar</div>`;
+                }
+
+                if (badgeNotificacao) {
+                    badgeNotificacao.style.display = "none";
+                }
+            }
+        }
+
+        document.addEventListener("click", function (event) {
+            const area = document.querySelector(".notificacao-area");
+            if (area && !area.contains(event.target)) {
+                fecharNotificacoes();
+            }
+        });
+
+        carregarNotificacoes();
+        setInterval(carregarNotificacoes, 20000);
+    </script>
 
 </body>
 </html>
