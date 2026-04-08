@@ -19,7 +19,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB = os.path.join(BASE_DIR, "banco.db")
+
+RENDER_DISK_PATH = (os.environ.get("RENDER_DISK_PATH") or "").strip()
+DB_DIR = RENDER_DISK_PATH if RENDER_DISK_PATH else BASE_DIR
+
+os.makedirs(DB_DIR, exist_ok=True)
+
+DB = os.path.join(DB_DIR, "banco.db")
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "agenda_app_chave_123")
@@ -1305,12 +1311,16 @@ def criar_notificacao_agendamento(cur, usuario_id, cliente, servico, data_agenda
     titulo = "Novo agendamento"
     mensagem = f"{cliente or 'Cliente'} agendou {servico or 'um serviço'} para {formatar_data_br_curta(data_agendamento)} às {hora_agendamento}"
 
+    link_destino = f"/agenda?data={data_agendamento}"
+
     payload = {
         "cliente": cliente or "",
         "servico": servico or "",
         "data": formatar_data_br_curta(data_agendamento),
+        "data_iso": data_agendamento or "",
         "hora": hora_agendamento or "",
         "agendamento_id": agendamento_id,
+        "link": link_destino,
         "whatsapp_link": gerar_link_whatsapp_admin(
             usuario_id, cliente, servico, data_agendamento, hora_agendamento
         )
@@ -1326,7 +1336,7 @@ def criar_notificacao_agendamento(cur, usuario_id, cliente, servico, data_agenda
         "agendamento",
         titulo,
         mensagem,
-        "/agenda",
+        link_destino,
         0,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         json.dumps(payload, ensure_ascii=False)
@@ -1362,17 +1372,28 @@ def listar_notificacoes_usuario(usuario_id, limite=15):
         except Exception:
             payload = {}
 
+        link_final = (
+            payload.get("link")
+            or row["link"]
+            or (
+                f"/agenda?data={payload.get('data_iso')}"
+                if payload.get("data_iso")
+                else "/agenda"
+            )
+        )
+
         notificacoes.append({
             "id": row["id"],
             "tipo": row["tipo"] or "",
             "titulo": row["titulo"] or "",
             "mensagem": row["mensagem"] or "",
-            "link": row["link"] or "/agenda",
+            "link": link_final,
             "lida": int(row["lida"] or 0),
             "criado_em": row["criado_em"] or "",
             "cliente": payload.get("cliente", ""),
             "servico": payload.get("servico", ""),
             "data": payload.get("data", ""),
+            "data_iso": payload.get("data_iso", ""),
             "hora": payload.get("hora", ""),
             "agendamento_id": payload.get("agendamento_id"),
             "whatsapp_link": payload.get("whatsapp_link", "")
@@ -2572,6 +2593,9 @@ def book_sem_usuario():
     if usuario_logado():
         slug = buscar_slug_usuario(usuario_id_logado())
         if slug:
+            data = (request.args.get("data") or "").strip()
+            if data:
+                return redirect(url_for("agendar_publico_slug", slug=slug, data=data))
             return redirect(url_for("agendar_publico_slug", slug=slug))
     return redirect(url_for("login"))
 

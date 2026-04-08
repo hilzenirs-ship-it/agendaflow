@@ -61,28 +61,54 @@
         }
     }
 
+    function converterDataBrParaIso(dataBr) {
+        if (!dataBr || typeof dataBr !== "string") return "";
+
+        const partes = dataBr.split("/");
+        if (partes.length !== 3) return "";
+
+        const [dia, mes, ano] = partes;
+        if (!dia || !mes || !ano) return "";
+
+        return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+    }
+
+    function obterDestinoNotificacao(item) {
+        const dataIso = converterDataBrParaIso(item.data || "");
+
+        if (dataIso) {
+            return `/agenda?data=${encodeURIComponent(dataIso)}`;
+        }
+
+        return item.link || "/agenda";
+    }
+
     async function mostrarNotificacaoSistema(titulo, corpo, link) {
         const permitido = await pedirPermissao();
         if (!permitido) return;
 
         if ("serviceWorker" in navigator) {
-            const reg = await navigator.serviceWorker.getRegistration();
-            if (reg) {
-                reg.showNotification(titulo, {
-                    body: corpo,
-                    icon: "/static/icons/icon-192.png",
-                    badge: "/static/icons/icon-192.png",
-                    data: { link: link || "/agenda" },
-                    tag: "agendaflow-agendamento"
-                });
-                return;
-            }
+            try {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (reg) {
+                    reg.showNotification(titulo, {
+                        body: corpo,
+                        icon: "/static/icons/icon-192.png",
+                        badge: "/static/icons/icon-192.png",
+                        data: { link: link || "/agenda" },
+                        tag: "agendaflow-agendamento"
+                    });
+                    return;
+                }
+            } catch (e) {}
         }
 
-        new Notification(titulo, {
-            body: corpo,
-            icon: "/static/icons/icon-192.png"
-        });
+        try {
+            new Notification(titulo, {
+                body: corpo,
+                icon: "/static/icons/icon-192.png"
+            });
+        } catch (e) {}
     }
 
     function render(lista, naoLidas) {
@@ -101,17 +127,20 @@
 
         if (!lista || lista.length === 0) {
             if (vazio) vazio.style.display = "block";
+            box.innerHTML = "";
             return;
         }
 
         if (vazio) vazio.style.display = "none";
 
         lista.forEach(item => {
+            const destino = obterDestinoNotificacao(item);
+
             const card = document.createElement("div");
             card.className = `notif-item ${item.lida ? "" : "nao-lida"}`;
 
             const whats = item.whatsapp_link
-                ? `<a class="notif-mini-btn whats" href="${item.whatsapp_link}" target="_blank">WhatsApp</a>`
+                ? `<a class="notif-mini-btn whats" href="${item.whatsapp_link}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`
                 : "";
 
             card.innerHTML = `
@@ -120,9 +149,9 @@
                     ${item.lida ? "" : `<button class="notif-mini-btn" data-lida="${item.id}">Marcar lida</button>`}
                 </div>
                 <div class="notif-item-texto">${item.mensagem || ""}</div>
-                <div class="notif-item-meta">${item.data || ""} ${item.hora ? "• " + item.hora : ""}</div>
+                <div class="notif-item-meta">${item.data || ""}${item.hora ? " • " + item.hora : ""}</div>
                 <div class="notif-item-acoes">
-                    <a class="notif-mini-btn abrir" href="${item.link || "/agenda"}">Abrir</a>
+                    <a class="notif-mini-btn abrir" href="${destino}">Abrir</a>
                     ${whats}
                 </div>
             `;
@@ -133,13 +162,17 @@
         document.querySelectorAll("[data-lida]").forEach(btn => {
             btn.addEventListener("click", async function (e) {
                 e.preventDefault();
-                const id = Number(this.getAttribute("data-lida"));
+                e.stopPropagation();
 
-                await fetch("/notificacoes/marcar_lida", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id })
-                });
+                const id = Number(this.getAttribute("data-lida"));
+                if (!id) return;
+
+                try {
+                    await fetch(`/notificacoes/${id}/ler`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" }
+                    });
+                } catch (e) {}
 
                 carregarNotificacoes(false);
             });
@@ -148,7 +181,14 @@
 
     async function carregarNotificacoes(avisoNovo = true) {
         try {
-            const resp = await fetch("/verificar_novos");
+            const resp = await fetch("/verificar_novos", {
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!resp.ok) return;
+
             const data = await resp.json();
 
             const lista = data.notificacoes || [];
@@ -161,12 +201,14 @@
             if (avisoNovo && ultimoId > 0 && salvo > 0 && ultimoId !== salvo) {
                 const maisNova = lista[0];
                 if (maisNova) {
+                    const destino = obterDestinoNotificacao(maisNova);
+
                     mostrarToast("🔔 Novo agendamento recebido");
                     tocarSomNotificacao();
                     mostrarNotificacaoSistema(
                         maisNova.titulo || "Novo agendamento",
                         maisNova.mensagem || "",
-                        maisNova.link || "/agenda"
+                        destino
                     );
                 }
             }
@@ -180,7 +222,6 @@
     function prepararUI() {
         const toggle = el("notif-toggle");
         const dropdown = el("notif-dropdown");
-        const marcarTodas = el("notif-marcar_todas") || el("notif-marcar-todas");
 
         if (toggle && dropdown) {
             toggle.addEventListener("click", function (e) {
@@ -192,18 +233,6 @@
                 if (!dropdown.contains(e.target) && !toggle.contains(e.target)) {
                     dropdown.classList.remove("aberto");
                 }
-            });
-        }
-
-        if (marcarTodas) {
-            marcarTodas.addEventListener("click", async function () {
-                await fetch("/notificacoes/marcar_lida", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ todas: true })
-                });
-
-                carregarNotificacoes(false);
             });
         }
     }

@@ -954,8 +954,8 @@
                 </div>
 
                 <div class="acoes-dia">
-                    <a href="/agenda?mes={{ mes }}&ano={{ ano }}" class="botao-acao botao-secundario">Fechar dia</a>
-                    <a href="/agendar?data={{ data_selecionada }}" class="botao-acao botao-primario">+ Novo agendamento</a>
+                    <a href="/agenda?mes={{ mes }}&ano={{ ano }}" class="botao-acao botao-secundario">Voltar ao mês</a>
+                    <a href="/studio/{{ session.get('slug', '') }}?data={{ data_selecionada }}" class="botao-acao botao-primario">+ Novo agendamento</a>
                 </div>
 
                 <div class="resumo-dia">
@@ -1146,6 +1146,28 @@
             }
         }
 
+        function converterDataBrParaIso(dataBr) {
+            if (!dataBr || typeof dataBr !== "string") return "";
+
+            const partes = dataBr.split("/");
+            if (partes.length !== 3) return "";
+
+            const [dia, mes, ano] = partes;
+            if (!dia || !mes || !ano) return "";
+
+            return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+        }
+
+        function obterDestinoNotificacao(n) {
+            const dataIso = converterDataBrParaIso(n.data || "");
+
+            if (dataIso) {
+                return `/agenda?data=${encodeURIComponent(dataIso)}`;
+            }
+
+            return n.link || "/agenda";
+        }
+
         function renderizarNotificacoes(lista) {
             if (!listaNotificacoes || !badgeNotificacao) return;
 
@@ -1177,7 +1199,7 @@
                         await marcarNotificacaoComoLida(n.id);
                     }
 
-                    window.location.href = n.link || "/agenda";
+                    window.location.href = obterDestinoNotificacao(n);
                 });
 
                 listaNotificacoes.appendChild(item);
