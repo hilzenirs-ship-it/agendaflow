@@ -501,6 +501,7 @@
             </div>
 
             <form method="POST">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <div class="bloco">
                     <h2>Como este dia deve funcionar?</h2>
                     <p>

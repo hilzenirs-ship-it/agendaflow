@@ -27,11 +27,25 @@ os.makedirs(DB_DIR, exist_ok=True)
 
 DB = os.path.join(DB_DIR, "banco.db")
 
+IS_DEBUG = (
+    os.environ.get("FLASK_DEBUG", "").strip().lower() in ("1", "true", "yes")
+    or os.environ.get("DEBUG", "").strip().lower() in ("1", "true", "yes")
+)
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if IS_DEBUG or os.environ.get("FLASK_ENV", "").strip().lower() == "development" or __name__ == "__main__":
+        SECRET_KEY = "agendaflow_dev_" + os.urandom(16).hex()
+    else:
+        raise RuntimeError("SECRET_KEY environment variable must be set in production for AgendaFlow.")
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
-app.secret_key = os.environ.get("SECRET_KEY", "agenda_app_chave_123")
+app.secret_key = SECRET_KEY
 
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = not IS_DEBUG
 
 DIAS_MAX_AGENDAMENTO = 30
 INTERVALO_MINUTOS = 60
@@ -76,6 +90,40 @@ def usuario_logado():
 
 def usuario_id_logado():
     return session.get("usuario_id")
+
+
+def gerar_csrf_token():
+    token = session.get("_csrf_token")
+    if not token:
+        token = os.urandom(16).hex()
+        session["_csrf_token"] = token
+    return token
+
+
+def validar_csrf_token(token):
+    csrf_value = session.get("_csrf_token", "")
+    if not token or not csrf_value:
+        return False
+    return hmac.compare_digest(csrf_value, token)
+
+
+@app.context_processor
+def inject_csrf_token():
+    return {"csrf_token": gerar_csrf_token}
+
+
+@app.before_request
+def proteger_csrf():
+    if request.method == "POST":
+        endpoint = request.endpoint or ""
+        if endpoint.startswith("static"):
+            return None
+        if endpoint in {"mercadopago_webhook"}:
+            return None
+
+        token = request.form.get("_csrf_token") or request.headers.get("X-CSRF-Token", "")
+        if not validar_csrf_token(token):
+            return "CSRF token inválido", 400
 
 
 # --------------------------------------------------
@@ -129,6 +177,107 @@ def normalizar_telefone(telefone):
 def email_valido(email):
     email = normalizar_email(email)
     return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
+
+
+def sanitizar_texto(texto, max_len=255):
+    """Remove scripts e limita tamanho"""
+    if not texto:
+        return ""
+    # Remove tags HTML/script
+    texto = re.sub(r'<[^>]+>', '', texto)
+    # Remove caracteres de controle exceto quebras de linha
+    texto = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', texto)
+    return texto.strip()[:max_len]
+
+
+def validar_nome(nome):
+    """Valida nome: não vazio, só letras/espacos, tamanho adequado"""
+    nome = sanitizar_texto(nome, 100)
+    if not nome or len(nome) < 2:
+        return False, "Nome deve ter pelo menos 2 caracteres"
+    if not re.match(r"^[a-zA-ZÀ-ÿ\s\-']+$", nome):
+        return False, "Nome contém caracteres inválidos"
+    return True, nome
+
+
+def validar_email(email):
+    """Valida email com regex mais robusta"""
+    email = normalizar_email(email)
+    if not email or len(email) > 254:
+        return False, "Email inválido ou muito longo"
+    # Regex mais precisa para email
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    if not re.match(pattern, email):
+        return False, "Formato de email inválido"
+    return True, email
+
+
+def validar_senha(senha):
+    """Valida senha: comprimento mínimo, complexidade básica"""
+    if not senha or len(senha) < 8:
+        return False, "Senha deve ter pelo menos 8 caracteres"
+    if len(senha) > 128:
+        return False, "Senha muito longa"
+    # Pelo menos uma letra e um número
+    if not re.search(r'[a-zA-Z]', senha) or not re.search(r'\d', senha):
+        return False, "Senha deve conter letras e números"
+    return True, senha
+
+
+def validar_telefone(telefone):
+    """Valida telefone brasileiro"""
+    telefone = normalizar_telefone(telefone)
+    if not telefone:
+        return True, ""  # Telefone opcional
+    # Aceita 10 ou 11 dígitos (com DDD)
+    if not re.match(r'^\d{10,11}$', telefone):
+        return False, "Telefone deve ter 10 ou 11 dígitos"
+    return True, telefone
+
+
+def validar_preco(preco_str):
+    """Valida preço: positivo, até 2 casas decimais"""
+    try:
+        preco = float(preco_str.replace(',', '.'))
+        if preco < 0 or preco > 999999.99:
+            return False, "Preço deve ser entre 0 e 999.999,99"
+        # Verifica se tem no máximo 2 casas decimais
+        if '.' in preco_str:
+            decimal_part = preco_str.split('.')[-1]
+            if len(decimal_part) > 2:
+                return False, "Preço deve ter no máximo 2 casas decimais"
+        return True, preco
+    except ValueError:
+        return False, "Preço inválido"
+
+
+def validar_duracao(duracao):
+    """Valida duração: formato como '1h', '30min', etc."""
+    duracao = sanitizar_texto(duracao, 20)
+    if not duracao:
+        return True, ""  # Opcional
+    # Aceita formatos como 1h, 30min, 1h30min, etc.
+    if not re.match(r'^(\d+h)?(\d+min)?$', duracao.replace(' ', '')):
+        return False, "Duração deve ser no formato '1h', '30min' ou '1h30min'"
+    return True, duracao
+
+
+def validar_data(data_str):
+    """Valida data no formato YYYY-MM-DD"""
+    try:
+        datetime.strptime(data_str, '%Y-%m-%d')
+        return True, data_str
+    except ValueError:
+        return False, "Data inválida"
+
+
+def validar_hora(hora_str):
+    """Valida hora no formato HH:MM"""
+    try:
+        datetime.strptime(hora_str, '%H:%M')
+        return True, hora_str
+    except ValueError:
+        return False, "Hora inválida"
 
 
 def obter_serializer_recuperacao():
@@ -1461,20 +1610,24 @@ def cadastro():
         senha = (request.form.get("senha") or "").strip()
         confirmar_senha = (request.form.get("confirmar_senha") or "").strip()
 
-        if not nome or not email or not senha or not confirmar_senha:
-            erro = "Preencha todos os campos."
+        # Validações robustas
+        valido, nome = validar_nome(nome)
+        if not valido:
+            erro = nome  # nome contém a mensagem de erro
             return render_template("cadastro.html", erro=erro, sucesso=sucesso)
 
-        if not email_valido(email):
-            erro = "Informe um e-mail válido."
+        valido, email = validar_email(email)
+        if not valido:
+            erro = email
+            return render_template("cadastro.html", erro=erro, sucesso=sucesso)
+
+        valido, senha = validar_senha(senha)
+        if not valido:
+            erro = senha
             return render_template("cadastro.html", erro=erro, sucesso=sucesso)
 
         if senha != confirmar_senha:
             erro = "As senhas não coincidem."
-            return render_template("cadastro.html", erro=erro, sucesso=sucesso)
-
-        if len(senha) < 4:
-            erro = "Sua senha precisa ter pelo menos 4 caracteres."
             return render_template("cadastro.html", erro=erro, sucesso=sucesso)
 
         con = conectar()
@@ -1545,12 +1698,14 @@ def login():
         email = normalizar_email(request.form.get("email"))
         senha = (request.form.get("senha") or "").strip()
 
-        if not email or not senha:
-            erro = "Preencha seu e-mail e sua senha."
+        # Validações
+        valido, email = validar_email(email)
+        if not valido:
+            erro = email
             return render_template("login.html", erro=erro, sucesso=sucesso)
 
-        if not email_valido(email):
-            erro = "Informe um e-mail válido."
+        if not senha:
+            erro = "Preencha sua senha."
             return render_template("login.html", erro=erro, sucesso=sucesso)
 
         con = conectar()
@@ -2341,12 +2496,25 @@ def servicos():
         preco = (request.form.get("preco") or "0").strip()
         duracao = (request.form.get("duracao") or "").strip()
 
-        if nome:
-            try:
-                preco = float(preco.replace(",", "."))
-            except Exception:
-                preco = 0
+        # Validações
+        valido, nome = validar_nome(nome)
+        if not valido:
+            # Para serviços, permitir nomes mais flexíveis
+            nome = sanitizar_texto(nome, 100)
+            if not nome:
+                con.close()
+                return redirect(url_for("servicos"))
 
+        valido, preco = validar_preco(preco)
+        if not valido:
+            con.close()
+            return redirect(url_for("servicos"))
+
+        valido, duracao = validar_duracao(duracao)
+        if not valido:
+            duracao = ""  # Torna opcional se inválido
+
+        if nome:
             cur.execute("""
                 INSERT INTO servicos (usuario_id, nome, preco, duracao)
                 VALUES (?, ?, ?, ?)
@@ -2391,10 +2559,22 @@ def editar_servico(id):
         preco = (request.form.get("preco") or "0").strip()
         duracao = (request.form.get("duracao") or "").strip()
 
-        try:
-            preco = float(preco.replace(",", "."))
-        except Exception:
-            preco = 0
+        # Validações
+        valido, nome = validar_nome(nome)
+        if not valido:
+            nome = sanitizar_texto(nome, 100)
+            if not nome:
+                con.close()
+                return redirect(url_for("servicos"))
+
+        valido, preco = validar_preco(preco)
+        if not valido:
+            con.close()
+            return redirect(url_for("servicos"))
+
+        valido, duracao = validar_duracao(duracao)
+        if not valido:
+            duracao = ""
 
         cur.execute("""
             UPDATE servicos
@@ -2506,7 +2686,7 @@ def horarios():
     return render_template("horarios.html", horarios=lista)
 
 
-@app.route("/excluir_horario/<int:id>")
+@app.route("/excluir_horario/<int:id>", methods=["POST"])
 def excluir_horario(id):
     if not usuario_logado():
         return redirect(url_for("login"))
@@ -2543,6 +2723,19 @@ def clientes():
         telefone = normalizar_telefone(request.form.get("telefone"))
         observacoes = (request.form.get("observacoes") or "").strip()
 
+        # Validações
+        valido, nome = validar_nome(nome)
+        if not valido:
+            con.close()
+            return redirect(url_for("clientes"))
+
+        valido, telefone = validar_telefone(telefone)
+        if not valido:
+            con.close()
+            return redirect(url_for("clientes"))
+
+        observacoes = sanitizar_texto(observacoes, 500)  # Limita observações
+
         if nome:
             cur.execute("""
                 INSERT INTO clientes (usuario_id, nome, telefone, observacoes)
@@ -2564,7 +2757,7 @@ def clientes():
     return render_template("clientes.html", clientes=lista_clientes)
 
 
-@app.route("/excluir_cliente/<int:id>")
+@app.route("/excluir_cliente/<int:id>", methods=["POST"])
 def excluir_cliente(id):
     if not usuario_logado():
         return redirect(url_for("login"))
@@ -2681,8 +2874,10 @@ def agendar_publico_slug(slug):
     hora = (request.form.get("hora") or "").strip()
     observacoes = (request.form.get("observacoes") or "").strip()
 
-    if not cliente or not servico or not data_selecionada or not hora:
-        erro = "Preencha nome, serviço, data e horário."
+    # Validações robustas
+    valido, cliente = validar_nome(cliente)
+    if not valido:
+        erro = cliente
         con.close()
         return render_template(
             "agendar.html",
@@ -2697,6 +2892,64 @@ def agendar_publico_slug(slug):
             dias_ocupados=dias_ocupados,
             config=config
         )
+
+    valido, telefone = validar_telefone(telefone)
+    if not valido:
+        erro = telefone
+        con.close()
+        return render_template(
+            "agendar.html",
+            servicos=servicos_lista,
+            horarios_fixos=horarios_disponiveis,
+            horas_ocupadas=horas_ocupadas,
+            data_selecionada=data_selecionada,
+            erro=erro,
+            data_min=hoje.strftime("%Y-%m-%d"),
+            data_max=data_maxima.strftime("%Y-%m-%d"),
+            dias_livres=dias_livres,
+            dias_ocupados=dias_ocupados,
+            config=config
+        )
+
+    # Valida serviço
+    servico_valido = any(s["nome"] == servico for s in servicos_lista)
+    if not servico_valido:
+        erro = "Serviço inválido."
+        con.close()
+        return render_template(
+            "agendar.html",
+            servicos=servicos_lista,
+            horarios_fixos=horarios_disponiveis,
+            horas_ocupadas=horas_ocupadas,
+            data_selecionada=data_selecionada,
+            erro=erro,
+            data_min=hoje.strftime("%Y-%m-%d"),
+            data_max=data_maxima.strftime("%Y-%m-%d"),
+            dias_livres=dias_livres,
+            dias_ocupados=dias_ocupados,
+            config=config
+        )
+
+    # Valida hora
+    valido, hora = validar_hora(hora)
+    if not valido:
+        erro = "Horário inválido."
+        con.close()
+        return render_template(
+            "agendar.html",
+            servicos=servicos_lista,
+            horarios_fixos=horarios_disponiveis,
+            horas_ocupadas=horas_ocupadas,
+            data_selecionada=data_selecionada,
+            erro=erro,
+            data_min=hoje.strftime("%Y-%m-%d"),
+            data_max=data_maxima.strftime("%Y-%m-%d"),
+            dias_livres=dias_livres,
+            dias_ocupados=dias_ocupados,
+            config=config
+        )
+
+    observacoes = sanitizar_texto(observacoes, 500)
 
     if not data_dentro_limite(data_selecionada):
         erro = f"Você pode agendar somente entre hoje e os próximos {DIAS_MAX_AGENDAMENTO} dias."
@@ -2859,7 +3112,7 @@ def sucesso(slug):
     )
 
 
-@app.route("/excluir_agendamento/<int:id>")
+@app.route("/excluir_agendamento/<int:id>", methods=["POST"])
 def excluir_agendamento(id):
     if not usuario_logado():
         return redirect(url_for("login"))
@@ -3187,4 +3440,4 @@ def mercadopago_webhook():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=IS_DEBUG)

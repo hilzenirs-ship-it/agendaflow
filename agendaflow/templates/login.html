@@ -183,12 +183,14 @@ Teste grátis por <strong>7 dias</strong> para conhecer o AgendaFlow.
 {% endif %}
 
 <form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
 <input
 type="email"
 name="email"
 placeholder="Seu e-mail"
 required
+maxlength="254"
 >
 
 <input

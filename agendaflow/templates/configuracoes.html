@@ -147,6 +147,7 @@
                 </div>
 
                 <form method="POST">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <input type="text" name="nome_profissional" placeholder="Nome do studio" value="{{ config['nome_profissional'] }}" required>
                     <input type="text" name="whatsapp" placeholder="Ex.: 5516999999999" value="{{ config['whatsapp'] }}" required>
 

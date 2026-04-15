@@ -175,6 +175,7 @@ Esse link de recuperação não pode mais ser usado.
 
 {% if token_valido %}
 <form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <div class="campo">
 <label>Nova senha</label>
 <input type="password" name="senha" placeholder="Digite sua nova senha" required>

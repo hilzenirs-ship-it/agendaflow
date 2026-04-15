@@ -23,6 +23,7 @@
                 </p>
 
                 <form method="POST">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <input type="text" name="cliente" placeholder="Seu nome" required>
 
                     <select name="servico" required>

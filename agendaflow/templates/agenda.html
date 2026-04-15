@@ -1001,7 +1001,10 @@
 
                         <div class="acoes-item">
                             <div class="status-agenda">Agendado</div>
-                            <a href="/excluir_agendamento/{{ ag.id }}" class="btn-excluir">Excluir</a>
+                            <form action="{{ url_for('excluir_agendamento', id=ag.id) }}" method="POST" style="margin:0; display:inline;">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-excluir" onclick="return confirm('Deseja excluir este agendamento?')">Excluir</button>
+                            </form>
                         </div>
                     </div>
                     {% endfor %}

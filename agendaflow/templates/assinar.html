@@ -152,7 +152,7 @@ text-decoration: none;
 </div>
 
 <form method="POST" action="{{ url_for('assinar') }}">
-<input
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 type="email"
 name="email"
 placeholder="Seu e-mail para pagamento"

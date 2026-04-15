@@ -261,19 +261,20 @@
                 <h2>Novo cliente</h2>
 
                 <form method="POST" action="/clientes">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <div class="campo">
                         <label for="nome">Nome</label>
-                        <input type="text" id="nome" name="nome" required>
+                        <input type="text" id="nome" name="nome" required minlength="2" maxlength="100" pattern="[a-zA-ZÀ-ÿ\s\-']+" title="Apenas letras, espaços, hífens e apóstrofos">
                     </div>
 
                     <div class="campo">
                         <label for="telefone">Telefone</label>
-                        <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000">
+                        <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" pattern="\d{10,11}" title="10 ou 11 dígitos">
                     </div>
 
                     <div class="campo">
                         <label for="observacoes">Observações</label>
-                        <textarea id="observacoes" name="observacoes" placeholder="Ex.: prefere atendimento pela manhã"></textarea>
+                        <textarea id="observacoes" name="observacoes" placeholder="Ex.: prefere atendimento pela manhã" maxlength="500"></textarea>
                     </div>
 
                     <button type="submit" class="btn">Salvar cliente</button>
@@ -292,11 +293,16 @@
                                 <p><strong>Observações:</strong> {{ cliente['observacoes'] or '-' }}</p>
 
                                 <div class="acoes">
-                                    <a class="btn-excluir"
-                                       href="/excluir_cliente/{{ cliente['id'] }}"
-                                       onclick="return confirm('Deseja excluir esta cliente?')">
-                                       Excluir
-                                    </a>
+                                    <form action="{{ url_for('excluir_cliente', id=cliente['id']) }}" method="POST" style="margin:0; display:inline;">
+                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                        <button
+                                            type="submit"
+                                            class="btn-excluir"
+                                            onclick="return confirm('Deseja excluir esta cliente?')"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         {% endfor %}

@@ -211,25 +211,26 @@ Cadastre-se para acessar sua agenda e começar a organizar seus atendimentos.
 {% endif %}
 
 <form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
 <div class="campo">
 <label>Nome</label>
-<input type="text" name="nome" placeholder="Seu nome completo" required>
+<input type="text" name="nome" placeholder="Seu nome completo" required minlength="2" maxlength="100" pattern="[a-zA-ZÀ-ÿ\s\-']+" title="Apenas letras, espaços, hífens e apóstrofos">
 </div>
 
 <div class="campo">
 <label>E-mail</label>
-<input type="email" name="email" placeholder="Seu melhor e-mail" required>
+<input type="email" name="email" placeholder="Seu melhor e-mail" required maxlength="254">
 </div>
 
 <div class="campo">
 <label>Senha</label>
-<input type="password" name="senha" placeholder="Crie uma senha" required>
+<input type="password" name="senha" placeholder="Crie uma senha (mín. 8 caracteres)" required minlength="8" maxlength="128" pattern="(?=.*[a-zA-Z])(?=.*\d).{8,}" title="Deve conter pelo menos uma letra e um número">
 </div>
 
 <div class="campo">
 <label>Confirmar senha</label>
-<input type="password" name="confirmar_senha" placeholder="Repita sua senha" required>
+<input type="password" name="confirmar_senha" placeholder="Repita sua senha" required minlength="8" maxlength="128">
 </div>
 
 <button type="submit" class="btn">

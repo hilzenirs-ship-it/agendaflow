@@ -240,6 +240,7 @@
                     </p>
 
                     <form method="POST" action="{{ url_for('horarios') }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <select name="dia_semana" required>
                             <option value="">Selecione o dia da semana</option>
                             <option value="Segunda">Segunda-feira</option>
@@ -267,11 +268,16 @@
                                     </div>
 
                                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                                        <a href="{{ url_for('excluir_horario', id=h['id']) }}"
-                                           class="botao secundario"
-                                           onclick="return confirm('Tem certeza que deseja remover este horário semanal?')">
-                                            Excluir
-                                        </a>
+                                        <form action="{{ url_for('excluir_horario', id=h['id']) }}" method="POST" style="margin:0;">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                            <button
+                                                type="submit"
+                                                class="botao secundario"
+                                                onclick="return confirm('Tem certeza que deseja remover este horário semanal?')"
+                                            >
+                                                Excluir
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>

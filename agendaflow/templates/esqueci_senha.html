@@ -185,6 +185,7 @@ Informe o e-mail da sua conta para receber o link de redefinição.
 {% endif %}
 
 <form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <div class="campo">
 <label>E-mail</label>
 <input type="email" name="email" placeholder="seuemail@exemplo.com" value="{{ email or '' }}" required>

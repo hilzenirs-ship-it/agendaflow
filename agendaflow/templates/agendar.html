@@ -623,6 +623,7 @@
             </div>
 
             <form method="POST" action="" id="form-agendamento">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="data" value="{{ data_selecionada }}">
                 <input type="hidden" name="hora" id="horaSelecionada" value="{{ request.form.get('hora', '') if request else '' }}">
 
@@ -642,6 +643,10 @@
                                 value="{{ request.form.get('cliente', '') if request else '' }}"
                                 placeholder="Digite seu nome"
                                 required
+                                minlength="2"
+                                maxlength="100"
+                                pattern="[a-zA-ZÀ-ÿ\s\-']+"
+                                title="Apenas letras, espaços, hífens e apóstrofos"
                             >
                         </div>
 
@@ -653,6 +658,8 @@
                                 name="telefone"
                                 value="{{ request.form.get('telefone', '') if request else '' }}"
                                 placeholder="(00) 00000-0000"
+                                pattern="\d{10,11}"
+                                title="10 ou 11 dígitos"
                             >
                         </div>
 
